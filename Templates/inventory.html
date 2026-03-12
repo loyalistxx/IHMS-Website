@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IHMS - إدارة المخزون</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../Static/stylesheet.css">
+</head>
+<body>
+
+    <div class="sidebar d-flex flex-column p-3">
+        <h3 class="text-center mb-4">IHMS</h3>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li><a href="index.html" class="nav-link">لوحة التحكم</a></li>
+            <li><a href="patients.html" class="nav-link">إدارة المرضى</a></li>
+            <li><a href="appointments.html" class="nav-link">المواعيد</a></li>
+            <li><a href="inventory.html" class="nav-link active">المخزون</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>مخزن الأدوية والمستلزمات</h2>
+                <small class="text-muted">متصل بنظام Odoo ERP</small>
+            </div>
+            <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                + إضافة صنف جديد
+            </button>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm border-0">
+                    <div class="text-muted">إجمالي الأصناف</div>
+                    <div class="h4 fw-bold">450</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm border-0 border-start border-danger border-5">
+                    <div class="text-muted">أصناف أوشكت على النفاذ</div>
+                    <div class="h4 fw-bold text-danger">8</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm border-0 border-start border-warning border-5">
+                    <div class="text-muted">أصناف تنتهي صلاحيتها قريباً</div>
+                    <div class="h4 fw-bold text-warning">15</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm inventory-card p-4">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>كود الصنف</th>
+                        <th>اسم الدواء/المستلزم</th>
+                        <th>الكمية المتاحة</th>
+                        <th>الوحدة</th>
+                        <th>تاريخ الصلاحية</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>MED-502</td>
+                        <td>Panadol Extra 500mg</td>
+                        <td class="status-low">12</td>
+                        <td>علبة</td>
+                        <td>2027-05-01</td>
+                        <td><span class="badge bg-danger">مخزون منخفض</span></td>
+                    </tr>
+                    <tr>
+                        <td>INS-101</td>
+                        <td>Surgical Gloves (M)</td>
+                        <td>1,200</td>
+                        <td>زوج</td>
+                        <td>2028-10-12</td>
+                        <td><span class="badge bg-success">متوفر</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addItemModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إضافة صنف للمخزن</h5>
+                    <button type="button" class="btn-close m-0" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">اسم الصنف</label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الكمية</label>
+                                <input type="number" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">تاريخ الصلاحية</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    <button type="button" class="btn btn-success">حفظ في Odoo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

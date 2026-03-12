@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IHMS - إدارة المواعيد</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../Static/stylesheet.css">
+</head>
+<body>
+    <div class="sidebar d-flex flex-column p-3">
+        <h3 class="text-center mb-4">IHMS</h3>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li><a href="index.html" class="nav-link">لوحة التحكم</a></li>
+            <li><a href="patients.html" class="nav-link">إدارة المرضى</a></li>
+            <li><a href="appointments.html" class="nav-link active">المواعيد</a></li>
+            <li><a href="#" class="nav-link">المخزون</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>جدول المواعيد</h2>
+            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#bookAppointmentModal">
+                + حجز موعد جديد
+            </button>
+        </div>
+
+        <div class="card shadow-sm appointment-card p-4">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>الوقت</th>
+                        <th>المريض</th>
+                        <th>الطبيب</th>
+                        <th>العيادة/التخصص</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>10:00 ص</td>
+                        <td>أحمد محمد علي</td>
+                        <td>د. محمود شاكر</td>
+                        <td>القلب</td>
+                        <td><span class="badge bg-info">مؤكد</span></td>
+                        <td><button class="btn btn-sm btn-outline-primary">تعديل</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="bookAppointmentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">حجز موعد جديد</h5>
+                    <button type="button" class="btn-close m-0" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">اختر المريض</label>
+                            <select class="form-select">
+                                <option>أحمد محمد علي</option>
+                                <option>سارة أحمد</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">اختر الطبيب</label>
+                            <select class="form-select">
+                                <option>د. محمود شاكر (القلب)</option>
+                                <option>د. هبة جميل (باطنة)</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">التاريخ</label>
+                                <input type="date" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الوقت</label>
+                                <input type="time" class="form-control">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary">تأكيد الحجز</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
