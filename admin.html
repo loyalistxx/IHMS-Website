@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="stylesheet.css">
+</head>
+<body>
+    <div class="sidebar d-flex flex-column p-3">
+    <h3 class="text-center mb-4">IHMS</h3>
+    <hr>
+    <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+            <a href="admin.html" class="nav-link active">لوحة التحكم</a>
+        </li>
+        <li>
+            <a href="patients.html" class="nav-link">إدارة المرضى</a>
+        </li>
+        <li>
+            <a href="#" class="nav-link text-white-50 disabled">المواعيد (قريباً)</a>
+        </li>
+        <li>
+            <a href="#" class="nav-link text-white-50 disabled">المخزون (Odoo)</a>
+        </li>
+    </ul>
+</div>
+
+    <div class="main-content">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4 rounded">
+            <div class="container-fluid">
+                <span class="navbar-brand">مرحباً، م. أدهم إبراهيم</span>
+            </div>
+        </nav>
+
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="card card-stats shadow p-3">
+                    <div class="text-muted">إجمالي المرضى</div>
+                    <div class="h3 fw-bold">1,250</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card card-stats shadow p-3 border-success">
+                    <div class="text-muted">مواعيد اليوم</div>
+                    <div class="h3 fw-bold">42</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card card-stats shadow p-3 border-warning">
+                    <div class="text-muted">نقص في الأدوية</div>
+                    <div class="h3 fw-bold">12</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card card-stats shadow p-3 border-info">
+                    <div class="text-muted">صافي الإيرادات</div>
+                    <div class="h3 fw-bold">EGP 150k</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">سجل الزيارات الأخيرة</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>رقم المريض</th>
+                            <th>الاسم</th>
+                            <th>التخصص</th>
+                            <th>الطبيب</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#1001</td>
+                            <td>أحمد محمد علي</td>
+                            <td>قلب وأوعية</td>
+                            <td>د. محمود شاكر</td>
+                            <td><span class="badge bg-success">تم الفحص</span></td>
+                        </tr>
+                        <tr>
+                            <td>#1002</td>
+                            <td>سارة أحمد</td>
+                            <td>باطنة</td>
+                            <td>د. هبة جميل</td>
+                            <td><span class="badge bg-warning">قيد الانتظار</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

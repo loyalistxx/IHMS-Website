@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IHMS - إدارة المرضى</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="stylesheet.css">
+</head>
+<body>
+   <div class="sidebar d-flex flex-column p-3">
+    <h3 class="text-center mb-4">IHMS</h3>
+    <hr>
+    <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+            <a href="admin.html" class="nav-link">لوحة التحكم</a>
+        </li>
+        <li>
+            <a href="patients.html" class="nav-link active">إدارة المرضى</a>
+        </li>
+        <li>
+            <a href="#" class="nav-link text-white-50 disabled">المواعيد (قريباً)</a>
+        </li>
+        <li>
+            <a href="#" class="nav-link text-white-50 disabled">المخزون (Odoo)</a>
+        </li>
+    </ul>
+</div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>سجل المرضى</h2>
+            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addPatientModal">
+                + إضافة مريض جديد
+            </button>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <input type="text" class="form-control shadow-sm" placeholder="البحث برقم الهاتف أو الرقم القومي...">
+            </div>
+        </div>
+
+        <div class="table-container shadow-sm">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>الرقم القومي</th>
+                        <th>الاسم الكامل</th>
+                        <th>الجنس</th>
+                        <th>تاريخ الميلاد</th>
+                        <th>آخر زيارة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2990101XXXXXXX</td>
+                        <td>أحمد محمد علي</td>
+                        <td>ذكر</td>
+                        <td>1999-01-01</td>
+                        <td>2026-03-10</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info">تعديل</button>
+                            <button class="btn btn-sm btn-outline-danger">حذف</button>
+                        </td>
+                    </tr>
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addPatientModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تسجيل مريض جديد في النظام</h5>
+                    <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="patientForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">الاسم الكامل</label>
+                                <input type="text" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">الرقم القومي</label>
+                                <input type="text" class="form-control" maxlength="14" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">تاريخ الميلاد</label>
+                                <input type="date" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">الجنس</label>
+                                <select class="form-select">
+                                    <option value="male">ذكر</option>
+                                    <option value="female">أنثى</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">رقم الهاتف</label>
+                                <input type="tel" class="form-control" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    <button type="submit" form="patientForm" class="btn btn-primary">حفظ البيانات</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
