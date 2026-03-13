@@ -5,16 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IHMS - تسجيل الدخول</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../Static/stylesheet.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
 </head>
 <body class="loginBody">
 
     <div class="login-card text-center">
         <h2 class="mb-4 fw-bold text-primary">IHMS</h2>
         <p class="text-muted mb-4">مرحباً بك في نظام إدارة الرعاية الصحية المتكامل</p>
-
-        <form id="loginForm">
+{% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show p-2 small" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close shadow-none" style="font-size: 0.5rem;" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+        
+        <form id="loginForm" action="/login" method="post">
             <div class="d-flex justify-content-around mb-4 bg-light p-2 rounded-3">
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="userRole" id="roleAdmin" value="admin" checked>
@@ -26,34 +35,19 @@
                 </div>
             </div>
 
-            <div class="mb-3 text-start">
-                <label class="form-label">اسم المستخدم أو البريد</label>
-                <input type="text" class="form-control p-3" placeholder="أدخل بياناتك..." required>
-            </div>
-            
-            <div class="mb-4 text-start">
-                <label class="form-label">كلمة المرور</label>
-                <input type="password" class="form-control p-3" placeholder="********" required>
-            </div>
-
-            <button type="submit" class="btn btn-login w-100 fw-bold">تسجيل الدخول</button>
-        </form>
+<div class="mb-3 text-start">
+        <label class="form-label">اسم المستخدم أو البريد</label>
+        <input type="text" name="username" class="form-control p-3" placeholder="أدخل بياناتك..." required>
+    </div>
+    
+    <div class="mb-4 text-start">
+        <label class="form-label">كلمة المرور</label>
+        <input type="password" name="password" class="form-control p-3" placeholder="********" required>
     </div>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault(); // منع الصفحة من إعادة التحميل
-
-            // الحصول على القيمة المختارة (Admin أو Patient)
-            const role = document.querySelector('input[name="userRole"]:checked').value;
-
-            if (role === 'admin') {
-    window.location.href = 'admin.html';
-} else {
-    window.location.href = 'patient_portal.html'; 
-}
-        });
-    </script>
+    <button type="submit" class="btn btn-login w-100 fw-bold">تسجيل الدخول</button>
+        </form>
+    </div>
 
 </body>
 </html>

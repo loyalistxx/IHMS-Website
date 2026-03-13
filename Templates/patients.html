@@ -1,48 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IHMS - إدارة المرضى</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../Static/stylesheet.css">
-</head>
-<body>
-   <div class="sidebar d-flex flex-column p-3">
-    <h3 class="text-center mb-4">IHMS</h3>
-    <hr>
-    <ul class="nav nav-pills flex-column mb-auto">
-        <li class="nav-item">
-            <a href="admin.html" class="nav-link">لوحة التحكم</a>
-        </li>
-        <li>
-            <a href="patients.html" class="nav-link active">إدارة المرضى</a>
-        </li>
-        <li>
-            <a href="appointments.html" class="nav-link">المواعيد</a>
-        </li>
-        <li>
-            <a href="inventory.html" class="nav-link">المخزون (Odoo)</a>
-        </li>
-    </ul>
-</div>
-
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>IHMS - إدارة المرضى</title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+            crossorigin="anonymous">
+        <link rel="stylesheet"
+            href="{{ url_for('static', filename='stylesheet.css') }}">
+    </head>
+    <body>
+        <div class="sidebar d-flex flex-column p-3">
+            <h3 class="text-center mb-4 text-primary fw-bold">IHMS</h3>
+            <hr>
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                    <a href="{{ url_for('admin_dashboard') }}"
+                        class="nav-link">لوحة
+                        التحكم</a>
+                </li>
+                <li>
+                    <a href="{{ url_for('patients_list') }}"
+                        class="nav-link active">إدارة المرضى</a>
+                </li>
+                <a href="{{ url_for('appointments') }}"
+                    class="nav-link">المواعيد</a>
+            </li>
+            <li>
+                <a href="{{ url_for('inventory') }}" class="nav-link">(Odoo)
+                    المخزون</a>
+            </li>
+        </ul>
+    </div>
     <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>سجل المرضى</h2>
-            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addPatientModal">
+            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal"
+                data-bs-target="#addPatientModal">
                 + إضافة مريض جديد
             </button>
         </div>
 
+        <!-- رسائل الفلاش (Flash Messages) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div
+            class="alert alert-{{ category }} alert-dismissible fade show p-2 small"
+            role="alert">
+            {{ message }}
+            <button type="button" class="btn-close shadow-none"
+                style="font-size: 0.5rem;" data-bs-dismiss="alert"
+                aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
         <div class="row mb-4">
             <div class="col-md-6">
-                <input type="text" class="form-control shadow-sm" placeholder="البحث برقم الهاتف أو الرقم القومي...">
+                <form action="{{ url_for('patients_list') }}" method="GET"
+                    class="d-flex gap-2">
+                    <input type="text" name="search"
+                        class="form-control shadow-sm"
+                        placeholder="البحث بالرقم القومي..."
+                        value="{{ request.args.get('search', '') }}">
+                    <button type="submit"
+                        class="btn btn-outline-primary">بحث</button>
+                    {% if request.args.get('search') %}
+                    <a href="{{ url_for('patients_list') }}"
+                        class="btn btn-outline-secondary">إلغاء</a>
+                    {% endif %}
+                </form>
             </div>
         </div>
-
-        <div class="table-container shadow-sm">
+        <div class="table-container shadow-sm p-3 bg-white rounded">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
@@ -50,71 +85,173 @@
                         <th>الاسم الكامل</th>
                         <th>الجنس</th>
                         <th>تاريخ الميلاد</th>
+                        <th>الهاتف</th>
                         <th>آخر زيارة</th>
                         <th>الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for p in patients %}
                     <tr>
-                        <td>2990101XXXXXXX</td>
-                        <td>أحمد محمد علي</td>
-                        <td>ذكر</td>
-                        <td>1999-01-01</td>
-                        <td>2026-03-10</td>
+                        <td>{{ p.NationalID }}</td>
+                        <td>{{ p.FullName }}</td>
+                        <td>{{ p.Gender }}</td>
+                        <td>{{ p.BirthDate }}</td>
+                        <td>{{ p.Phone }}</td>
+                        <td>{{ p.LastVisit if p.LastVisit else '---' }}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-info">تعديل</button>
-                            <button class="btn btn-sm btn-outline-danger">حذف</button>
+                            <button class="btn btn-sm btn-outline-info"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editModal{{ p.NationalID }}">تعديل</button>
+                            <a
+                                href="{{ url_for('delete_patient', id=p.NationalID) }}"
+                                class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('هل أنت متأكد؟')">حذف</a>
                         </td>
                     </tr>
-                    </tbody>
-            </table>
-        </div>
-    </div>
 
-    <div class="modal fade" id="addPatientModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">تسجيل مريض جديد في النظام</h5>
-                    <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="patientForm">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">الاسم الكامل</label>
-                                <input type="text" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">الرقم القومي</label>
-                                <input type="text" class="form-control" maxlength="14" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">تاريخ الميلاد</label>
-                                <input type="date" class="form-control" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">الجنس</label>
-                                <select class="form-select">
-                                    <option value="male">ذكر</option>
-                                    <option value="female">أنثى</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">رقم الهاتف</label>
-                                <input type="tel" class="form-control" required>
+                    <div class="modal fade" id="editModal{{ p.NationalID }}"
+                        tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">تعديل بيانات
+                                        المريض</h5>
+                                    <button type="button"
+                                        class="btn-close m-0"
+                                        data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body text-start"
+                                    dir="rtl">
+                                    <form
+                                        action="{{ url_for('edit_patient_action', id=p.NationalID) }}"
+                                        method="POST">
+                                        <div class="mb-3">
+                                            <label class="form-label">الاسم
+                                                الكامل</label>
+                                            <input type="text"
+                                                name="fullname"
+                                                class="form-control"
+                                                value="{{ p.FullName }}"
+                                                required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label
+                                                class="form-label">الجنس</label>
+                                            <select name="gender"
+                                                class="form-select">
+                                                <option value="ذكر" {% if
+                                                    p.Gender == 'ذكر'
+                                                    %}selected{% endif
+                                                    %}>ذكر</option>
+                                                <option value="أنثى" {% if
+                                                    p.Gender == 'أنثى'
+                                                    %}selected{% endif
+                                                    %}>أنثى</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">تاريخ
+                                                الميلاد</label>
+                                            <input type="date"
+                                                name="birth_date"
+                                                class="form-control"
+                                                value="{{ p.BirthDate }}"
+                                                required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">رقم
+                                                الهاتف</label>
+                                            <input type="tel" name="phone"
+                                                class="form-control"
+                                                value="{{ p.Phone }}"
+                                                required>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="submit"
+                                                class="btn btn-success w-100">حفظ
+                                                التعديلات</button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
-                    <button type="submit" form="patientForm" class="btn btn-primary">حفظ البيانات</button>
+                    </div>
+
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">لا
+                            يوجد مرضى مسجلين حالياً</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="modal fade" id="addPatientModal" tabindex="-1"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">تسجيل مريض جديد في
+                            النظام</h5>
+                        <button type="button" class="btn-close m-0"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="patientForm"
+                            action="{{ url_for('add_patient_action') }}"
+                            method="POST">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">الاسم
+                                        الكامل</label>
+                                    <input type="text" name="fullname"
+                                        class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">الرقم
+                                        القومي</label>
+                                    <input type="text" name="national_id"
+                                        class="form-control" maxlength="14"
+                                        required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">تاريخ
+                                        الميلاد</label>
+                                    <input type="date" name="birth_date"
+                                        class="form-control" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">الجنس</label>
+                                    <select name="gender"
+                                        class="form-select">
+                                        <option value="ذكر">ذكر</option>
+                                        <option value="أنثى">أنثى</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">رقم
+                                        الهاتف</label>
+                                    <input type="tel" name="phone"
+                                        class="form-control" required>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">إغلاق</button>
+                        <button type="submit" form="patientForm"
+                            class="btn btn-primary">حفظ البيانات</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-</body>
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+            crossorigin="anonymous"></script>
+    </body>
 </html>

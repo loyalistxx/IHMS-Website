@@ -5,25 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IHMS - لوحة التحكم</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../Static/stylesheet.css">
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='stylesheet.css') }}">
 </head>
 <body>
     <div class="sidebar d-flex flex-column p-3">
-    <h3 class="text-center mb-4">IHMS</h3>
+    <h3 class="text-center mb-4 text-primary fw-bold">IHMS</h3>
     <hr>
     <ul class="nav nav-pills flex-column mb-auto">
         <li class="nav-item">
-            <a href="admin.html" class="nav-link active">لوحة التحكم</a>
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link active">لوحة
+                    التحكم</a>
+            </li>
+            <li>
+                <a href="{{ url_for('patients_list') }}"
+                    class="nav-link">إدارة المرضى</a>
+            </li>
+            <a href="{{ url_for('appointments') }}" class="nav-link">المواعيد</a>
         </li>
         <li>
-            <a href="patients.html" class="nav-link">إدارة المرضى</a>
-        </li>
-        <li>
-            <a href="appointments.html" class="nav-link">المواعيد (قريباً)</a>
-        </li>
-        <li>
-            <a href="inventory.html" class="nav-link">المخزون (Odoo)</a>
+            <a href="{{ url_for('inventory') }}" class="nav-link">(Odoo) المخزون</a>
         </li>
     </ul>
 </div>
@@ -34,6 +35,16 @@
                 <span class="navbar-brand">مرحباً، م. أدهم إبراهيم</span>
             </div>
         </nav>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show p-2 small" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close shadow-none" style="font-size: 0.5rem;" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
         <div class="row">
             <div class="col-md-3 mb-4">

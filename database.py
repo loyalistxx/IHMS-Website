@@ -11,7 +11,7 @@ def login():
 # مسار لوحة التحكم
 @app.route('/dashboard')
 def dashboard():
-    return render_template('index.html')
+    return render_template('admin.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

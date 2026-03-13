@@ -1,5 +1,4 @@
         body {
-            font-family: 'Cairo', sans-serif;
             background-color: #f8f9fa;
         }
 
@@ -23,6 +22,7 @@
         }
 
         .nav-link {
+            text-align: right;
             color: #ecf0f1;
             margin-bottom: 10px;
         }

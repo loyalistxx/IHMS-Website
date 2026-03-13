@@ -1,101 +1,213 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IHMS - إدارة المواعيد</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../Static/stylesheet.css">
-</head>
-<body>
-    <div class="sidebar d-flex flex-column p-3">
-        <h3 class="text-center mb-4">IHMS</h3>
-        <hr>
-        <ul class="nav nav-pills flex-column mb-auto">
-            <li><a href="index.html" class="nav-link">لوحة التحكم</a></li>
-            <li><a href="patients.html" class="nav-link">إدارة المرضى</a></li>
-            <li><a href="appointments.html" class="nav-link active">المواعيد</a></li>
-            <li><a href="#" class="nav-link">المخزون</a></li>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>IHMS - إدارة المواعيد</title>
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+        <link rel="stylesheet"
+            href="{{ url_for('static', filename='stylesheet.css') }}">
+    </head>
+    <body>
+        <div class="sidebar d-flex flex-column p-3">
+            <h3 class="text-center mb-4 text-primary fw-bold">IHMS</h3>
+            <hr>
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                    <a href="{{ url_for('admin_dashboard') }}"
+                        class="nav-link">لوحة
+                        التحكم</a>
+                </li>
+                <li>
+                    <a href="{{ url_for('patients_list') }}"
+                        class="nav-link">إدارة المرضى</a>
+                </li>
+                <a href="{{ url_for('appointments') }}"
+                    class="nav-link active">المواعيد</a>
+            </li>
+            <li>
+                <a href="{{ url_for('inventory') }}" class="nav-link">المخزون
+                    (Odoo)</a>
+            </li>
         </ul>
     </div>
 
     <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>جدول المواعيد</h2>
-            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#bookAppointmentModal">
+            <h2>سجل المواعيد</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div
+                class="alert alert-{{ category }} alert-dismissible fade show p-2 small"
+                role="alert">
+                {{ message }}
+                <button type="button" class="btn-close shadow-none"
+                    style="font-size: 0.5rem;" data-bs-dismiss="alert"
+                    aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal"
+                data-bs-target="#addAppModal">
                 + حجز موعد جديد
             </button>
         </div>
 
-        <div class="card shadow-sm appointment-card p-4">
+        <div class="table-container shadow-sm p-3 bg-white rounded">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
+                        <th>#</th>
+                        <th>اسم المريض</th>
+                        <th>التاريخ</th>
                         <th>الوقت</th>
-                        <th>المريض</th>
-                        <th>الطبيب</th>
-                        <th>العيادة/التخصص</th>
                         <th>الحالة</th>
                         <th>الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for app in appointments %}
                     <tr>
-                        <td>10:00 ص</td>
-                        <td>أحمد محمد علي</td>
-                        <td>د. محمود شاكر</td>
-                        <td>القلب</td>
-                        <td><span class="badge bg-info">مؤكد</span></td>
-                        <td><button class="btn btn-sm btn-outline-primary">تعديل</button></td>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ app.FullName }}</td>
+                        <td>{{ app.AppDate }}</td>
+                        <td>{{ app.AppTime }}</td>
+                        <td><span class="badge bg-primary">{{ app.Status
+                                }}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editAppModal{{ app.AppointmentID }}">تعديل</button>
+                        </td>
                     </tr>
+
+                    <div class="modal fade"
+                        id="editAppModal{{ app.AppointmentID }}" tabindex="-1"
+                        aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">تعديل الموعد: {{
+                                        app.FullName }}</h5>
+                                    <button type="button" class="btn-close m-0"
+                                        data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body text-start">
+                                    <form
+                                        action="{{ url_for('edit_appointment', id=app.AppointmentID) }}"
+                                        method="POST">
+                                        <div class="mb-3">
+                                            <label
+                                                class="form-label">التاريخ</label>
+                                            <input type="date" name="app_date"
+                                                class="form-control"
+                                                value="{{ app.AppDate }}"
+                                                required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label
+                                                class="form-label">الوقت</label>
+                                            <input type="time" name="app_time"
+                                                class="form-control"
+                                                value="{{ app.AppTime }}"
+                                                required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label
+                                                class="form-label">الحالة</label>
+                                            <select name="status"
+                                                class="form-select">
+                                                <option value="قادم" {% if
+                                                    app.Status == 'قادم'
+                                                    %}selected{% endif
+                                                    %}>قادم</option>
+                                                <option value="تم الكشف" {% if
+                                                    app.Status == 'تم الكشف'
+                                                    %}selected{% endif %}>تم
+                                                    الكشف</option>
+                                                <option value="ملغي" {% if
+                                                    app.Status == 'ملغي'
+                                                    %}selected{% endif
+                                                    %}>ملغي</option>
+                                                <option value="فحص" {% if
+                                                    app.Status == 'فحص'
+                                                    %}selected{% endif
+                                                    %}>فحص</option>
+                                            </select>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="submit"
+                                                class="btn btn-success w-100">حفظ
+                                                التغييرات</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 
-    <div class="modal fade" id="bookAppointmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="addAppModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">حجز موعد جديد</h5>
-                    <button type="button" class="btn-close m-0" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close m-0"
+                        data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <form>
+                <div class="modal-body text-start">
+                    <form action="{{ url_for('add_appointment') }}"
+                        method="POST">
                         <div class="mb-3">
                             <label class="form-label">اختر المريض</label>
-                            <select class="form-select">
-                                <option>أحمد محمد علي</option>
-                                <option>سارة أحمد</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">اختر الطبيب</label>
-                            <select class="form-select">
-                                <option>د. محمود شاكر (القلب)</option>
-                                <option>د. هبة جميل (باطنة)</option>
+                            <select name="patient_id" class="form-select"
+                                required>
+                                <option value selected disabled>-- اختر مريضاً
+                                    من القائمة --</option>
+                                {% for p in patients %}
+                                <option value="{{ p.NationalID }}">{{ p.FullName
+                                    }} ({{ p.NationalID }})</option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">التاريخ</label>
-                                <input type="date" class="form-control">
+                                <input type="date" name="app_date"
+                                    class="form-control" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">الوقت</label>
-                                <input type="time" class="form-control">
+                                <input type="time" name="app_time"
+                                    class="form-control" required>
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">الحالة</label>
+                            <select name="status" class="form-select">
+                                <option value="قادم">قادم</option>
+                                <option value="فحص">فحص</option>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit"
+                                class="btn btn-primary w-100">تأكيد
+                                الحجز</button>
+                        </div>
                     </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-primary">تأكيد الحجز</button>
                 </div>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
