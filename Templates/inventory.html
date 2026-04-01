@@ -1,125 +1,277 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IHMS - إدارة المخزون</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../static/stylesheet.css">
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>IHMS - إدارة المخزون</title>
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+        <link
+            href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap"
+            rel="stylesheet">
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+        <link rel="stylesheet" href="../static/stylesheet.css">
+    </head>
+    <body>
 
-    <div class="sidebar d-flex flex-column p-3">
-        <h3 class="text-center mb-4">IHMS</h3>
-        <hr>
-        <ul class="nav nav-pills flex-column mb-auto">
-            <li><a href="index.html" class="nav-link">لوحة التحكم</a></li>
-            <li><a href="patients.html" class="nav-link">إدارة المرضى</a></li>
-            <li><a href="appointments.html" class="nav-link">المواعيد</a></li>
-            <li><a href="inventory.html" class="nav-link active">المخزون</a></li>
-        </ul>
-    </div>
-
-    <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2>مخزن الأدوية والمستلزمات</h2>
-                <small class="text-muted">متصل بنظام Odoo ERP</small>
-            </div>
-            <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addItemModal">
-                + إضافة صنف جديد
-            </button>
+        <div class="sidebar d-flex flex-column p-3">
+            <h3 class="text-center mb-4 text-primary fw-bold">IHMS</h3>
+            <hr>
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item"><a href="{{ url_for('admin_dashboard') }}"
+                        class="nav-link">لوحة التحكم</a></li>
+                <li><a href="{{ url_for('patients_list') }}"
+                        class="nav-link">إدارة المرضى</a></li>
+                <li><a href="{{ url_for('appointments') }}"
+                        class="nav-link">المواعيد</a></li>
+                <li><a href="{{ url_for('inventory') }}"
+                        class="nav-link active">المخزون</a></li>
+            </ul>
         </div>
 
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm border-0">
-                    <div class="text-muted">إجمالي الأصناف</div>
-                    <div class="h4 fw-bold">450</div>
+        <div class="main-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>مخزن الأدوية والمستلزمات</h2>
+                </div>
+                <button class="btn btn-success shadow-sm" data-bs-toggle="modal"
+                    data-bs-target="#addItemModal">
+                    <i class="bi bi-plus-lg"></i> إضافة صنف جديد
+                </button>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card p-3 shadow-sm border-0">
+                        <div class="text-muted">إجمالي الأصناف</div>
+                        <div class="h4 fw-bold">{{ total_items }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div
+                        class="card p-3 shadow-sm border-0 border-start border-danger border-5">
+                        <div class="text-muted">أصناف أوشكت على النفاذ</div>
+                        <div class="h4 fw-bold text-danger">{{ low_stock_count
+                            }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div
+                        class="card p-3 shadow-sm border-0 border-start border-warning border-5">
+                        <div class="text-muted">نقص حاد (نفذت)</div>
+                        <div class="h4 fw-bold text-warning">{{
+                            out_of_stock_count }}</div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm border-0 border-start border-danger border-5">
-                    <div class="text-muted">أصناف أوشكت على النفاذ</div>
-                    <div class="h4 fw-bold text-danger">8</div>
-                </div>
+
+            <div class="card shadow-sm mb-4 p-3 border-0">
+                <form class="row g-3">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control"
+                            placeholder="ابحث باسم الصنف أو الكود...">
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select">
+                            <option selected>كل التصنيفات</option>
+                            <option>أدوية</option>
+                            <option>مستلزمات جراحية</option>
+                            <option>أدوات معملية</option>
+                        </select>
+                    </div>
+                </form>
             </div>
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm border-0 border-start border-warning border-5">
-                    <div class="text-muted">أصناف تنتهي صلاحيتها قريباً</div>
-                    <div class="h4 fw-bold text-warning">15</div>
+
+            <div class="card shadow-sm inventory-card p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">كود الصنف</th>
+                                <th>اسم الدواء/المستلزم</th>
+                                <th>الكمية المتاحة</th>
+                                <th>الوحدة</th>
+                                <th>تاريخ الصلاحية</th>
+                                <th>الحالة</th>
+                                <th class="text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td class="ps-4 fw-bold text-secondary">{{
+                                    item.code }}</td>
+                                <td>{{ item.name }}</td>
+                                <td>
+                                    <span
+                                        class="{% if item.quantity < 20 %}text-danger fw-bold{% endif %}">
+                                        {{ item.quantity }}
+                                    </span>
+                                </td>
+                                <td>{{ item.unit }}</td>
+                                <td>{{ item.expiry_date }}</td>
+                                <td>
+                                    {% if item.quantity > 20 %}
+                                    <span
+                                        class="badge bg-success-subtle text-success border border-success">متوفر</span>
+                                    {% elif item.quantity > 0 %}
+                                    <span
+                                        class="badge bg-danger-subtle text-danger border border-danger">مخزون
+                                        منخفض</span>
+                                    {% else %}
+                                    <span
+                                        class="badge bg-dark-subtle text-dark border border-dark">نفذ
+                                        من المخزن</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <button
+                                        class="btn btn-sm btn-outline-primary edit-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editItemModal"
+                                        data-id="{{ item.id }}"
+                                        data-name="{{ item.name }}"
+                                        data-qty="{{ item.quantity }}"
+                                        data-unit="{{ item.unit }}"
+                                        data-expiry="{{ item.expiry_date }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <a
+                                        href="{{ url_for('delete_item', id=item.id) }}"
+                                        class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('هل أنت متأكد من الحذف؟')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <div class="card shadow-sm inventory-card p-4">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>كود الصنف</th>
-                        <th>اسم الدواء/المستلزم</th>
-                        <th>الكمية المتاحة</th>
-                        <th>الوحدة</th>
-                        <th>تاريخ الصلاحية</th>
-                        <th>الحالة</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>MED-502</td>
-                        <td>Panadol Extra 500mg</td>
-                        <td class="status-low">12</td>
-                        <td>علبة</td>
-                        <td>2027-05-01</td>
-                        <td><span class="badge bg-danger">مخزون منخفض</span></td>
-                    </tr>
-                    <tr>
-                        <td>INS-101</td>
-                        <td>Surgical Gloves (M)</td>
-                        <td>1,200</td>
-                        <td>زوج</td>
-                        <td>2028-10-12</td>
-                        <td><span class="badge bg-success">متوفر</span></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="modal fade" id="addItemModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">إضافة صنف للمخزن</h5>
-                    <button type="button" class="btn-close m-0" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form>
-                        <div class="mb-3">
-                            <label class="form-label">اسم الصنف</label>
-                            <input type="text" class="form-control">
+        <div class="modal fade" id="addItemModal" tabindex="-1"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">إضافة صنف جديد للمخزن</h5>
+                        <button type="button"
+                            class="btn-close btn-close-white m-0"
+                            data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="{{ url_for('add_inventory_item') }}"
+                        method="POST">
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">كود الصنف
+                                        (SKU)</label>
+                                    <input type="text" name="item_code"
+                                        class="form-control"
+                                        placeholder="مثلاً: MED-100" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">اسم الصنف</label>
+                                    <input type="text" name="item_name"
+                                        class="form-control" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">الكمية
+                                        الابتدائية</label>
+                                    <input type="number" name="quantity"
+                                        class="form-control" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">الوحدة</label>
+                                    <select name="unit" class="form-select">
+                                        <option value="علبة">علبة</option>
+                                        <option value="شريط">شريط</option>
+                                        <option value="قطعة">قطعة</option>
+                                        <option value="زوج">زوج</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">تاريخ
+                                        الصلاحية</label>
+                                    <input type="date" name="expiry_date"
+                                        class="form-control">
+                                </div>
+                            </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">الكمية</label>
-                                <input type="number" class="form-control">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">تاريخ الصلاحية</label>
-                                <input type="date" class="form-control">
-                            </div>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">إلغاء</button>
+                            <button type="submit"
+                                class="btn btn-success px-4">حفظ
+                                ومزامنة</button>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
-                    <button type="button" class="btn btn-success">حفظ في Odoo</button>
+            </div>
+        </div>
+
+        <div class="modal fade" id="editItemModal" tabindex="-1"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">تعديل بيانات الصنف</h5>
+                        <button type="button"
+                            class="btn-close btn-close-white m-0"
+                            data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="{{ url_for('update_inventory') }}"
+                        method="POST">
+                        <div class="modal-body">
+                            <input type="hidden" name="item_id" id="edit-id">
+                            <div class="mb-3">
+                                <label class="form-label">اسم الصنف</label>
+                                <input type="text" name="item_name"
+                                    id="edit-name" class="form-control"
+                                    required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">الكمية</label>
+                                    <input type="number" name="quantity"
+                                        id="edit-qty" class="form-control"
+                                        required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">تاريخ
+                                        الصلاحية</label>
+                                    <input type="date" name="expiry_date"
+                                        id="edit-expiry" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">إلغاء</button>
+                            <button type="submit" class="btn btn-primary">حفظ
+                                التغييرات</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+        <script>
+    const editButtons = document.querySelectorAll('.edit-btn');
+    editButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('edit-id').value = this.getAttribute('data-id');
+            document.getElementById('edit-name').value = this.getAttribute('data-name');
+            document.getElementById('edit-qty').value = this.getAttribute('data-qty');
+            document.getElementById('edit-expiry').value = this.getAttribute('data-expiry');
+        });
+    });
+</script>
+
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
 </html>

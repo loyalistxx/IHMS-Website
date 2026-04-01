@@ -13,8 +13,9 @@ def get_db_connection():
         "Trusted_Connection=yes;"
     )
     return pyodbc.connect(conn_str)
-db = get_db_connection()
+
 # --- 2. المسارات (Routes) ---
+db = get_db_connection()
 
 # صفحة تسجيل الدخول
 @app.route('/')
@@ -57,53 +58,53 @@ def admin_dashboard():
     return render_template('admin.html')
 
 # إدارة المرضى (العرض + البحث) - دالة واحدة فقط
-@app.route('/admin/patients')
+@app.route('/patients')
 def patients_list():
-    search_query = request.args.get('search') 
-    conn = None # تعريف المتغير خارج Try لضمان إغلاقه
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # أضفنا عمود Phone هنا لكي يعمل الـ Update Modal
-        query = "SELECT NationalID, FullName, Gender, BirthDate, Phone FROM Patients"
-        
-        if search_query:
-            cursor.execute(query + " WHERE NationalID LIKE ?", (f'%{search_query}%',))
-        else:
-            cursor.execute(query)
-            
-        data = cursor.fetchall()
-        return render_template('patients.html', patients=data)
-    except Exception as e:
-        print(f"Database Error: {e}")
-        return render_template('patients.html', patients=[])
-    finally:
-        if conn: conn.close() # إغلاق آمن وسريع
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT PatientID, NationalID, FullName, BirthDate, gender, phone, blood_type FROM Patients")
+    rows = cursor.fetchall()
+    
+    patients = []
+    for row in rows:
+        patients.append({
+            'id': row.PatientID,
+            'NationalID': row.NationalID,
+            'name': row.FullName,
+            'BirthDate': row.BirthDate,
+            'gender': row.gender,
+            'phone': row.phone,
+            'blood_type': row.blood_type
+        })
+    conn.close()
+    return render_template('patients.html', patients=patients)
 
 # إضافة مريض جديد
-@app.route('/admin/add_patient', methods=['POST'])
-def add_patient_action():
-    fullname = request.form.get('fullname')
-    national_id = request.form.get('national_id')
-    gender = request.form.get('gender')
-    birth_date = request.form.get('birth_date')
-    phone = request.form.get('phone')
+@app.route('/patients/add', methods=['POST'])
+def add_patient():
+    if request.method == 'POST':
+        national_id = request.form.get('NationalID')
+        name = request.form.get('FullName')
+        birth_date = request.form.get('birthDate')
+        gender = request.form.get('gender')
+        phone = request.form.get('phone')
+        blood_type = request.form.get('blood_type')
+        history = request.form.get('medical_history')
 
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO Patients (FullName, NationalID, Gender, BirthDate, Phone, Password) 
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (fullname, national_id, gender, birth_date, phone, 'p123'))
-        conn.commit()
-        flash("تم إضافة المريض بنجاح!", "success")
-    except Exception as e:
-        print(f"Error adding patient: {e}")
-        flash("حدث خطأ أثناء الإضافة", "danger")
-    conn.close()
-    return redirect(url_for('patients_list'))
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO Patients (NationalID, FullName, BirthDate, gender, phone, blood_type, medical_history)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (national_id, name, birth_date, gender, phone, blood_type, history))
+            conn.commit()
+            conn.close()
+            flash('تم تسجيل المريض بنجاح')
+        except Exception as e:
+            flash(f'خطأ في التسجيل: {str(e)}')
+            
+        return redirect(url_for('patients_list'))
 
 # حذف مريض
 @app.route('/admin/delete_patient/<id>')
@@ -143,6 +144,7 @@ def edit_patient_action(id):
         flash("فشل في تحديث البيانات", "danger")
     conn.close()
     return redirect(url_for('patients_list'))
+
 # إدارة المواعيد
 @app.route('/admin/appointments')
 def appointments_list():
@@ -249,20 +251,132 @@ def edit_appointment(id):
         
     return redirect(url_for('appointments_list'))
 
+# إدارة المخزون
+@app.route('/inventory')
+def inventory():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # 1. تأكد من جلب العمود 'id' من الجدول
+    cursor.execute("SELECT id, item_code, item_name, quantity, unit, expiry_date FROM Inventory")
+    rows = cursor.fetchall()
+    
+    items = []
+    low_stock_count = 0
+    out_of_stock_count = 0
+    
+    for row in rows:
+        item = {
+            'id': row.id,              # 2. هذا هو السطر الناقص الذي يسبب الخطأ
+            'code': row.item_code,
+            'name': row.item_name,
+            'quantity': row.quantity,
+            'unit': row.unit,
+            'expiry_date': row.expiry_date
+        }
+        items.append(item)
+        
+        if row.quantity <= 0:
+            out_of_stock_count += 1
+        elif row.quantity < 20:
+            low_stock_count += 1
+
+    conn.close()
+    return render_template('inventory.html', 
+                           items=items, 
+                           total_items=len(items), 
+                           low_stock_count=low_stock_count, 
+                           out_of_stock_count=out_of_stock_count)
+    
+# إضافة صنف جديد إلى المخزون
+@app.route('/inventory/add', methods=['POST'])
+def add_inventory_item():
+    if request.method == 'POST':
+        item_code = request.form.get('item_code')
+        item_name = request.form.get('item_name')
+        quantity = request.form.get('quantity')
+        unit = request.form.get('unit')
+        expiry_date = request.form.get('expiry_date')
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # إدخال البيانات في الجدول
+            cursor.execute("""
+                INSERT INTO Inventory (item_code, item_name, quantity, unit, expiry_date)
+                VALUES (?, ?, ?, ?, ?)
+            """, (item_code, item_name, quantity, unit, expiry_date))
+            
+            conn.commit()
+            conn.close()
+            
+            flash('تمت إضافة الصنف بنجاح في SQL Server!')
+            
+            # ملاحظة: هنا يمكنك إضافة كود المزامنة مع Odoo API مستقبلاً
+            
+        except Exception as e:
+            flash(f'حدث خطأ أثناء الحفظ: {str(e)}')
+        
+        return redirect(url_for('inventory'))
+    
+# تعديل بيانات صنف موجود
+@app.route('/inventory/update', methods=['POST'])
+def update_inventory():
+    if request.method == 'POST':
+        item_id = request.form.get('item_id') # نحتاج الـ ID للتعديل
+        item_name = request.form.get('item_name')
+        quantity = request.form.get('quantity')
+        unit = request.form.get('unit')
+        expiry_date = request.form.get('expiry_date')
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE Inventory 
+                SET item_name = ?, quantity = ?, unit = ?, expiry_date = ?
+                WHERE id = ?
+            """, (item_name, quantity, unit, expiry_date, item_id))
+            conn.commit()
+            conn.close()
+            flash('تم تحديث بيانات الصنف بنجاح')
+        except Exception as e:
+            flash(f'خطأ في التحديث: {str(e)}')
+            
+        return redirect(url_for('inventory'))
+
+# حذف صنف من المخزون
+@app.route('/inventory/delete/<int:id>')
+def delete_item(id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # تنفيذ أمر الحذف بناءً على الـ ID
+        cursor.execute("DELETE FROM Inventory WHERE id = ?", (id,))
+        
+        conn.commit()
+        conn.close()
+        flash('تم حذف الصنف بنجاح')
+    except Exception as e:
+        flash(f'حدث خطأ أثناء الحذف: {str(e)}')
+    
+    return redirect(url_for('inventory'))
+    
 # إدارة المواعيد
 @app.route('/admin/appointments')
 def appointments():
     return render_template('appointments.html')
 
-# إدارة المخزون
-@app.route('/admin/inventory')
-def inventory():
-    return render_template('inventory.html')
+
 
 # بوابة المريض
 @app.route('/patient/portal')
 def patient_portal():
     return render_template('patient_portal.html')
+
+
 # --- 3. تشغيل السيرفر (يجب أن يكون في آخر الملف) ---
 if __name__ == '__main__':
     app.run(debug=True, threaded=True) # Threaded يجعل التعامل مع الطلبات أسرع
