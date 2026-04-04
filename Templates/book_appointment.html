@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IHMS - حجز موعد جديد</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #f0f2f5; }
+        .booking-card { border-radius: 20px; border: none; overflow: hidden; }
+        .booking-header { background: #0d6efd; color: white; padding: 30px; text-align: center; }
+        .btn-booking { border-radius: 10px; padding: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card booking-card shadow-lg">
+                    <div class="booking-header">
+                        <i class="bi bi-calendar-plus fs-1"></i>
+                        <h3 class="mt-2">حجز موعد جديد</h3>
+                        <p class="mb-0 opacity-75">يرجى اختيار الموعد المناسب لك</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <form action="{{ url_for('book_appointment') }}" method="POST">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold"><i class="bi bi-calendar-event me-2"></i>تاريخ الموعد</label>
+                                <input type="date" name="app_date" class="form-control form-control-lg" required min="{{ current_date }}">
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold"><i class="bi bi-clock me-2"></i>وقت الموعد</label>
+                                <input type="time" name="app_time" class="form-control form-control-lg" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold"><i class="bi bi-chat-left-text me-2"></i>ملاحظات إضافية (اختياري)</label>
+                                <textarea name="notes" class="form-control" rows="3" placeholder="مثلاً: أعاني من صداع مستمر منذ يومين..."></textarea>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-booking fs-5">تأكيد الحجز</button>
+                                <a href
