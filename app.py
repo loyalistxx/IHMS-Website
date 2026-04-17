@@ -601,6 +601,22 @@ def my_appointments():
     conn.close()
     return render_template('my_appointments.html', appointments=apps)
 
+# عرض الملف الشخصي للمريض
+@app.route('/patient/profile')
+def patient_profile():
+    if 'patient_id' not in session:
+        return redirect(url_for('patient_login'))
+    
+    p_id = session['patient_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # جلب كافة بيانات المريض
+    cursor.execute("SELECT * FROM Patients WHERE NationalID = ?", (p_id,))
+    patient = cursor.fetchone()
+    conn.close()
+    
+    return render_template('patient_profile.html', patient=patient)
 
 # تسجيل الخروج
 @app.route('/patient/logout')
