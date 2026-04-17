@@ -57,6 +57,7 @@ def handle_login():
         return redirect(url_for('login'))
 
 # لوحة التحكم
+# لوحة التحكم المحدثة
 @app.route('/admin/dashboard')
 def admin_dashboard():
     if 'admin_logged_in' not in session:
@@ -65,29 +66,51 @@ def admin_dashboard():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # 1. إجمالي عدد المرضى
-    cursor.execute("SELECT COUNT(*) FROM Patients")
-    total_patients = cursor.fetchone()[0]
+    try:
+        # 1. إجمالي عدد المرضى
+        cursor.execute("SELECT COUNT(*) FROM Patients")
+        total_patients = cursor.fetchone()[0]
 
-    # 2. مواعيد اليوم
-    cursor.execute("SELECT COUNT(*) FROM appointments WHERE AppDate = ?", (date.today(),))
-    today_apps = cursor.fetchone()[0]
+        # 2. مواعيد اليوم
+        cursor.execute("SELECT COUNT(*) FROM appointments WHERE AppDate = ?", (date.today(),))
+        today_apps = cursor.fetchone()[0]
 
-    # 3. نواقص المخزون (أقل من 20)
-    cursor.execute("SELECT COUNT(*) FROM Inventory WHERE quantity < 20")
-    low_stock = cursor.fetchone()[0]
+        # 3. نواقص المخزون (أقل من 20)
+        cursor.execute("SELECT COUNT(*) FROM Inventory WHERE quantity < 20")
+        low_stock = cursor.fetchone()[0]
 
-    # 4. المواعيد التي تمت (تم الكشف)
-    cursor.execute("SELECT COUNT(*) FROM appointments WHERE [Status] = 'تم الكشف'")
-    completed_apps = cursor.fetchone()[0]
+        # 4. المواعيد التي تمت (تم الكشف)
+        cursor.execute("SELECT COUNT(*) FROM appointments WHERE [Status] = 'تم الكشف'")
+        completed_apps = cursor.fetchone()[0]
 
-    conn.close()
+        # 5. جلب آخر 5 مرضى للجدول (الديناميكي)
+        cursor.execute("SELECT TOP 5 NationalID, FullName, Phone, blood_type FROM Patients ORDER BY PatientID DESC")
+        rows = cursor.fetchall()
+        latest_patients = []
+        for r in rows:
+            latest_patients.append({
+                "id": r.NationalID, 
+                "name": r.FullName, 
+                "phone": r.Phone, 
+                "blood_type": r.blood_type
+            })
+
+    except Exception as e:
+        print(f"Error in Dashboard: {e}")
+        # قيم افتراضية في حالة الخطأ لضمان عدم توقف الصفحة
+        total_patients = today_apps = low_stock = completed_apps = 0
+        latest_patients = []
+
+    finally:
+        # الإغلاق يكون هنا في النهاية تماماً بعد انتهاء كل العمليات
+        conn.close()
     
     return render_template('admin.html', 
                            total_patients=total_patients, 
                            today_apps=today_apps, 
                            low_stock=low_stock,
-                           completed_apps=completed_apps)
+                           completed_apps=completed_apps,
+                           latest_patients=latest_patients)
 
 # إدارة المرضى (العرض + البحث) - دالة واحدة فقط
 @app.route('/patients')
@@ -307,22 +330,7 @@ def edit_appointment(id):
         
     return redirect(url_for('appointments_list'))
 
-# تحديث حالة الموعد فقط (مثلاً من قائمة المواعيد)
-@app.route('/admin/update_appointment_status/<int:id>', methods=['POST'])
-def update_appointment_status(id):
-    new_status = request.form.get('status')
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("UPDATE appointments SET Status = ? WHERE AppointmentID = ?", (new_status, id))
-        conn.commit()
-        conn.close()
-        flash("تم تحديث حالة الموعد", "success")
-    except Exception as e:
-        flash(f"خطأ: {e}", "danger")
-    return redirect(url_for('appointments_list'))
-
-# تأكيد الكشف وتحديث سجل المريض تلقائياً
+# تأكيد الكشف وتحديث سجل المريض تلقائياً من قبل الأدمن
 @app.route('/admin/complete_appointment/<int:app_id>')
 def complete_appointment(app_id):
     if 'admin_logged_in' not in session:
@@ -332,25 +340,29 @@ def complete_appointment(app_id):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # 1. تحديث حالة الموعد إلى 'تم الكشف'
-        # ونحتاج لجلب الـ PatientID لاستخدامه في الخطوة التالية
+        # نستخدم الكلمة المطابقة تماماً للـ Constraint
+        new_status = 'تم الكشف' 
+
+        # التعديل هنا: نستخدم N قبل علامة الاستهام في الاستعلام لضمان قبول Unicode
         cursor.execute("""
             UPDATE appointments 
-            SET [Status] = 'تم الكشف' 
+            SET [Status] = ? 
             OUTPUT inserted.PatientID, inserted.AppDate
             WHERE AppointmentID = ?
-        """, (app_id,))
+        """, (new_status, app_id))
         
         result = cursor.fetchone()
         
         if result:
             p_id, app_date = result
-            # 2. تحديث تاريخ آخر زيارة للمريض تلقائياً
             cursor.execute("UPDATE Patients SET LastVisit = ? WHERE NationalID = ?", (app_date, p_id))
+            # تأكد أن id=1 موجود فعلاً في المخزون
+            # إذا كان "مستلزمات عامة" مثلاً الـ ID بتاعه هو 5
+            cursor.execute("UPDATE Inventory SET quantity = quantity - 1 WHERE id = 2 AND quantity > 0")
             
         conn.commit()
         conn.close()
-        flash("تم تأكيد الكشف وتحديث سجل المريض بنجاح", "success")
+        flash("تم تأكيد الكشف بنجاح", "success")
     except Exception as e:
         flash(f"حدث خطأ: {str(e)}", "danger")
         
@@ -600,6 +612,9 @@ def my_appointments():
     
     conn.close()
     return render_template('my_appointments.html', appointments=apps)
+
+# تأكيد الكشف وتحديث سجل المريض تلقائياً من قبل الأدمن
+
 
 # عرض الملف الشخصي للمريض
 @app.route('/patient/profile')

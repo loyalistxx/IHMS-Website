@@ -1,33 +1,34 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IHMS - لوحة التحكم</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link rel="stylesheet"
-        href="{{ url_for('static', filename='stylesheet.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
 </head>
+
 <body>
     <div class="sidebar d-flex flex-column p-3">
-    <h3 class="text-center mb-4 text-primary fw-bold">IHMS</h3>
-    <hr>
-    <ul class="nav nav-pills flex-column mb-auto">
-        <li class="nav-item">
+        <h3 class="text-center mb-4 text-primary fw-bold">IHMS</h3>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
                 <a href="{{ url_for('admin_dashboard') }}" class="nav-link active">لوحة
                     التحكم</a>
             </li>
             <li>
-                <a href="{{ url_for('patients_list') }}"
-                    class="nav-link">إدارة المرضى</a>
+                <a href="{{ url_for('patients_list') }}" class="nav-link">إدارة المرضى</a>
             </li>
             <a href="{{ url_for('appointments') }}" class="nav-link">المواعيد</a>
-        </li>
-        <li>
-            <a href="{{ url_for('inventory') }}" class="nav-link">المخزون</a>
-        </li>
-    </ul>
-</div>
+            </li>
+            <li>
+                <a href="{{ url_for('inventory') }}" class="nav-link">المخزون</a>
+            </li>
+        </ul>
+    </div>
 
     <div class="main-content">
         <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4 rounded">
@@ -36,65 +37,66 @@
             </div>
         </nav>
         {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
+        {% if messages %}
         {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show p-2 small" role="alert">
+        <div class="alert alert-{{ category }} alert-dismissible fade show p-2 small" role="alert">
             {{ message }}
-            <button type="button" class="btn-close shadow-none" style="font-size: 0.5rem;" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
+            <button type="button" class="btn-close shadow-none" style="font-size: 0.5rem;" data-bs-dismiss="alert"
+                aria-label="Close"></button>
+        </div>
         {% endfor %}
-      {% endif %}
-    {% endwith %}
+        {% endif %}
+        {% endwith %}
 
         <div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm bg-primary text-white p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-0">إجمالي المرضى</h6>
-                    <h2 class="fw-bold mb-0">{{ total_patients }}</h2>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-primary text-white p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">إجمالي المرضى</h6>
+                            <h2 class="fw-bold mb-0">{{ total_patients }}</h2>
+                        </div>
+                        <i class="bi bi-people fs-1 opacity-50"></i>
+                    </div>
                 </div>
-                <i class="bi bi-people fs-1 opacity-50"></i>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm bg-success text-white p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-0">مواعيد اليوم</h6>
-                    <h2 class="fw-bold mb-0">{{ today_apps }}</h2>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-success text-white p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">مواعيد اليوم</h6>
+                            <h2 class="fw-bold mb-0">{{ today_apps }}</h2>
+                        </div>
+                        <i class="bi bi-calendar-check fs-1 opacity-50"></i>
+                    </div>
                 </div>
-                <i class="bi bi-calendar-check fs-1 opacity-50"></i>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm bg-warning text-dark p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-0">نواقص المخزون</h6>
-                    <h2 class="fw-bold mb-0">{{ low_stock }}</h2>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-warning text-dark p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">نواقص المخزون</h6>
+                            <h2 class="fw-bold mb-0">{{ low_stock }}</h2>
+                        </div>
+                        <i class="bi bi-exclamation-triangle fs-1 opacity-50"></i>
+                    </div>
                 </div>
-                <i class="bi bi-exclamation-triangle fs-1 opacity-50"></i>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm bg-info text-white p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-0">كشوفات تمت</h6>
-                    <h2 class="fw-bold mb-0">{{ completed_apps }}</h2>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-info text-white p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">كشوفات تمت</h6>
+                            <h2 class="fw-bold mb-0">{{ completed_apps }}</h2>
+                        </div>
+                        <i class="bi bi-check2-circle fs-1 opacity-50"></i>
+                    </div>
                 </div>
-                <i class="bi bi-check2-circle fs-1 opacity-50"></i>
             </div>
         </div>
-    </div>
-</div>
 
         <div class="card shadow">
             <div class="card-header bg-white">
@@ -112,26 +114,24 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for patient in latest_patients %}
                         <tr>
-                            <td>#1001</td>
-                            <td>أحمد محمد علي</td>
-                            <td>قلب وأوعية</td>
-                            <td>د. محمود شاكر</td>
-                            <td><span class="badge bg-success">تم الفحص</span></td>
-                        </tr>
-                        <tr>
-                            <td>#1002</td>
-                            <td>سارة أحمد</td>
-                            <td>باطنة</td>
+                            <td>#{{ patient.id }}</td>
+                            <td>{{ patient.name }}</td>
+                            <td>الباطنة</td>
                             <td>د. هبة جميل</td>
-                            <td><span class="badge bg-warning">قيد الانتظار</span></td>
+                            <td><span class="badge bg-success">نشط</span></td>
                         </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
 </body>
+
 </html>
