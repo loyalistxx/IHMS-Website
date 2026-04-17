@@ -504,6 +504,40 @@ def book_appointment():
     # لإرسال تاريخ اليوم لمنع الحجز في الماضي في الـ HTML
     return render_template('book_appointment.html', current_date=date.today().isoformat())
 
+# عرض مواعيد المريض في صفحة الـ Dashboard الخاصة به
+@app.route('/patient/my-appointments')
+def my_appointments():
+    if 'patient_id' not in session:
+        return redirect(url_for('patient_login'))
+    
+    p_id = session['patient_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT AppointmentID, 
+               CONVERT(VARCHAR, AppDate, 23) as AppDate, 
+               LEFT(CONVERT(VARCHAR, AppTime, 108), 5) as AppTime, 
+               [Status], Notes
+        FROM appointments 
+        WHERE PatientID = ? 
+        ORDER BY AppDate DESC, AppTime DESC
+    """, (p_id,))
+    
+    # تحويل البيانات لقاموس لسهولة التعامل في HTML
+    apps = []
+    for row in cursor.fetchall():
+        apps.append({
+            'id': row.AppointmentID,
+            'date': row.AppDate,
+            'time': row.AppTime,
+            'status': row.Status,
+            'notes': row.Notes
+        })
+    
+    conn.close()
+    return render_template('my_appointments.html', appointments=apps)
+
 # تسجيل الخروج
 @app.route('/patient/logout')
 def patient_logout():

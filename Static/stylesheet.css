@@ -149,3 +149,32 @@
             color: #e74c3c;
             font-weight: bold;
         }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 1px solid #eee;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            text-align: center;
+            text-decoration: none;
+            color: #6c757d;
+            font-size: 12px;
+        }
+
+        .nav-item.active {
+            color: #0d6efd;
+        }
+
+        .nav-item i {
+            font-size: 24px;
+            display: block;
+        }
