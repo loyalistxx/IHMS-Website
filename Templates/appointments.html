@@ -1,160 +1,214 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IHMS - إدارة المواعيد</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
-</head>
-<body>
-    <div class="sidebar d-flex flex-column p-3">
-        <h3 class="text-center mb-4 text-primary fw-bold">IHMS</h3>
-        <hr>
-        <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item"><a href="{{ url_for('admin_dashboard') }}" class="nav-link">لوحة التحكم</a></li>
-            <li><a href="{{ url_for('patients_list') }}" class="nav-link">إدارة المرضى</a></li>
-            <li><a href="{{ url_for('appointments_list') }}" class="nav-link active">المواعيد</a></li>
-            <li><a href="{{ url_for('inventory') }}" class="nav-link">المخزون</a></li>
-        </ul>
-    </div>
-
-    <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>سجل المواعيد</h2>
-            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addAppModal">
-                <i class="bi bi-plus-lg"></i> حجز موعد جديد
-            </button>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>IHMS - إدارة المواعيد</title>
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+        <link rel="stylesheet"
+            href="{{ url_for('static', filename='stylesheet.css') }}">
+    </head>
+    <body>
+        <div class="sidebar d-flex flex-column p-3">
+            <h3 class="text-center mb-4 text-primary fw-bold">IHMS</h3>
+            <hr>
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item"><a href="{{ url_for('admin_dashboard') }}"
+                        class="nav-link">لوحة التحكم</a></li>
+                <li><a href="{{ url_for('patients_list') }}"
+                        class="nav-link">إدارة المرضى</a></li>
+                <li><a href="{{ url_for('appointments_list') }}"
+                        class="nav-link active">المواعيد</a></li>
+                <li><a href="{{ url_for('inventory') }}"
+                        class="nav-link">المخزون</a></li>
+            </ul>
         </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show p-2" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <div class="main-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>سجل المواعيد</h2>
+                <button class="btn btn-primary shadow-sm" data-bs-toggle="modal"
+                    data-bs-target="#addAppModal">
+                    <i class="bi bi-plus-lg"></i> حجز موعد جديد
+                </button>
+            </div>
 
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-4">المريض</th>
-                            <th>التاريخ</th>
-                            <th>الوقت</th>
-                            <th>الحالة</th>
-                            <th>ملاحظات</th>
-                            <th class="text-center">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for app in appointments %}
-                        <tr>
-                            <td class="ps-4">
-                                <div class="fw-bold text-dark">{{ app.patient_name }}</div>
-                                <small class="text-muted">{{ app.national_id }}</small>
-                            </td>
-                            <td>{{ app.date }}</td>
-                            <td>{{ app.time }}</td>
-                            <td>
-                                {% if app.status == 'قادم' %}
-                                    <span class="badge rounded-pill bg-warning text-dark">قادم</span>
-                                {% elif app.status == 'تم الكشف' %}
-                                    <span class="badge rounded-pill bg-success">تم الكشف</span>
-                                {% else %}
-                                    <span class="badge rounded-pill bg-secondary">{{ app.status }}</span>
-                                {% endif %}
-                            </td>
-                            <td><small class="text-muted">{{ app.notes or '-' }}</small></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-primary edit-status-btn" 
-                                        data-bs-toggle="modal" 
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div
+                class="alert alert-{{ category }} alert-dismissible fade show p-2"
+                role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">المريض</th>
+                                <th>التاريخ</th>
+                                <th>الوقت</th>
+                                <th>الحالة</th>
+                                <th>ملاحظات</th>
+                                <th class="text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in appointments %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">{{
+                                        app.patient_name }}</div>
+                                    <small class="text-muted">{{ app.national_id
+                                        }}</small>
+                                </td>
+                                <td>{{ app.date }}</td>
+                                <td>{{ app.time }}</td>
+                                <td>
+                                    {% if app.status == 'قادم' %}
+                                    <span
+                                        class="badge rounded-pill bg-warning text-dark">قادم</span>
+                                    {% elif app.status == 'تم الكشف' %}
+                                    <span
+                                        class="badge rounded-pill bg-success">تم
+                                        الكشف</span>
+                                    {% else %}
+                                    <span
+                                        class="badge rounded-pill bg-secondary">{{
+                                        app.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td><small class="text-muted">{{ app.notes or
+                                        '-' }}</small></td>
+                                <td class="text-center">
+                                    {% if app.status == 'قادم' %}
+                                    <a
+                                        href="{{ url_for('complete_appointment', app_id=app.id) }}"
+                                        class="btn btn-success btn-sm shadow-sm"
+                                        onclick="return confirm('هل تريد تأكيد إتمام الكشف لهذا المريض؟')">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        تم الكشف
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted small"><i
+                                            class="bi bi-check-all"></i>
+                                        مكتمل</span>
+                                    {% endif %}
+                                    <button
+                                        class="btn btn-sm btn-outline-primary edit-status-btn"
+                                        data-bs-toggle="modal"
                                         data-bs-target="#editStatusModal"
                                         data-id="{{ app.id }}"
                                         data-status="{{ app.status }}">
-                                    <i class="bi bi-pencil-square"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="modal fade" id="addAppModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content border-0 shadow">
-                <form action="{{ url_for('add_appointment') }}" method="POST">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">حجز موعد جديد</h5>
-                        <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">المريض</label>
-                            <select name="patient_id" class="form-select" required>
-                                <option value="">-- اختر مريضاً --</option>
-                                {% for p in patients %}
-                                <option value="{{ p.id }}">{{ p.name }} ({{ p.id }})</option>
-                                {% endfor %}
+        <div class="modal fade" id="addAppModal" tabindex="-1"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 shadow">
+                    <form action="{{ url_for('add_appointment') }}"
+                        method="POST">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">حجز موعد جديد</h5>
+                            <button type="button"
+                                class="btn-close btn-close-white m-0"
+                                data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">المريض</label>
+                                <select name="patient_id" class="form-select"
+                                    required>
+                                    <option value>-- اختر مريضاً --</option>
+                                    {% for p in patients %}
+                                    <option value="{{ p.id }}">{{ p.name }} ({{
+                                        p.id }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label
+                                        class="form-label fw-bold">التاريخ</label>
+                                    <input type="date" name="app_date"
+                                        class="form-control" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label
+                                        class="form-label fw-bold">الوقت</label>
+                                    <input type="time" name="app_time"
+                                        class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">ملاحظات
+                                    إضافية</label>
+                                <textarea name="notes" class="form-control"
+                                    rows="2"
+                                    placeholder="أعراض المريض أو سبب الزيارة..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">إلغاء</button>
+                            <button type="submit" class="btn btn-primary">تأكيد
+                                الحجز</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="editStatusModal" tabindex="-1"
+            aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <form id="editStatusForm" method="POST">
+                        <div class="modal-header bg-info text-dark">
+                            <h5 class="modal-title">تحديث الحالة</h5>
+                            <button type="button" class="btn-close m-0"
+                                data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <select name="status" id="statusSelect"
+                                class="form-select">
+                                <option value="قادم">قادم</option>
+                                <option value="تم الكشف">تم الكشف</option>
+                                <option value="إلغاء">إلغاء</option>
                             </select>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">التاريخ</label>
-                                <input type="date" name="app_date" class="form-control" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">الوقت</label>
-                                <input type="time" name="app_time" class="form-control" required>
-                            </div>
+                        <div class="modal-footer">
+                            <button type="submit"
+                                class="btn btn-info btn-sm w-100">حفظ الحالة
+                                الجديدة</button>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">ملاحظات إضافية</label>
-                            <textarea name="notes" class="form-control" rows="2" placeholder="أعراض المريض أو سبب الزيارة..."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn btn-primary">تأكيد الحجز</button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="modal fade" id="editStatusModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-sm">
-            <div class="modal-content">
-                <form id="editStatusForm" method="POST">
-                    <div class="modal-header bg-info text-dark">
-                        <h5 class="modal-title">تحديث الحالة</h5>
-                        <button type="button" class="btn-close m-0" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <select name="status" id="statusSelect" class="form-select">
-                            <option value="قادم">قادم</option>
-                            <option value="تم الكشف">تم الكشف</option>
-                            <option value="إلغاء">إلغاء</option>
-                        </select>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-info btn-sm w-100">حفظ الحالة الجديدة</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
         // كود لتشغيل الـ Modal الخاص بتحديث الحالة
         const editStatusBtns = document.querySelectorAll('.edit-status-btn');
         const statusForm = document.getElementById('editStatusForm');
@@ -171,5 +225,5 @@
             });
         });
     </script>
-</body>
+    </body>
 </html>

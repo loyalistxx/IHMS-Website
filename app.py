@@ -8,11 +8,12 @@ app.secret_key = "secret_key_for_session"
 #  إعداد الاتصال بقاعدة البيانات
 def get_db_connection():
     conn_str = (
-        "Driver={SQL Server};"
+        "Driver={ODBC Driver 17 for SQL Server};" # هذا التعريف أكثر استقراراً مع بايثون
         "Server=ADHAM\\MSSQLSERVER01;"
         "Database=IHMS;"
         "Trusted_Connection=yes;"
     )
+    # إذا لم يعمل Driver 17، جرب SQL Server Native Client 11.0
     return pyodbc.connect(conn_str)
 
 # صفحة تسجيل الدخول
@@ -58,7 +59,35 @@ def handle_login():
 # لوحة التحكم
 @app.route('/admin/dashboard')
 def admin_dashboard():
-    return render_template('admin.html')
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # 1. إجمالي عدد المرضى
+    cursor.execute("SELECT COUNT(*) FROM Patients")
+    total_patients = cursor.fetchone()[0]
+
+    # 2. مواعيد اليوم
+    cursor.execute("SELECT COUNT(*) FROM appointments WHERE AppDate = ?", (date.today(),))
+    today_apps = cursor.fetchone()[0]
+
+    # 3. نواقص المخزون (أقل من 20)
+    cursor.execute("SELECT COUNT(*) FROM Inventory WHERE quantity < 20")
+    low_stock = cursor.fetchone()[0]
+
+    # 4. المواعيد التي تمت (تم الكشف)
+    cursor.execute("SELECT COUNT(*) FROM appointments WHERE [Status] = 'تم الكشف'")
+    completed_apps = cursor.fetchone()[0]
+
+    conn.close()
+    
+    return render_template('admin.html', 
+                           total_patients=total_patients, 
+                           today_apps=today_apps, 
+                           low_stock=low_stock,
+                           completed_apps=completed_apps)
 
 # إدارة المرضى (العرض + البحث) - دالة واحدة فقط
 @app.route('/patients')
@@ -291,6 +320,40 @@ def update_appointment_status(id):
         flash("تم تحديث حالة الموعد", "success")
     except Exception as e:
         flash(f"خطأ: {e}", "danger")
+    return redirect(url_for('appointments_list'))
+
+# تأكيد الكشف وتحديث سجل المريض تلقائياً
+@app.route('/admin/complete_appointment/<int:app_id>')
+def complete_appointment(app_id):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # 1. تحديث حالة الموعد إلى 'تم الكشف'
+        # ونحتاج لجلب الـ PatientID لاستخدامه في الخطوة التالية
+        cursor.execute("""
+            UPDATE appointments 
+            SET [Status] = 'تم الكشف' 
+            OUTPUT inserted.PatientID, inserted.AppDate
+            WHERE AppointmentID = ?
+        """, (app_id,))
+        
+        result = cursor.fetchone()
+        
+        if result:
+            p_id, app_date = result
+            # 2. تحديث تاريخ آخر زيارة للمريض تلقائياً
+            cursor.execute("UPDATE Patients SET LastVisit = ? WHERE NationalID = ?", (app_date, p_id))
+            
+        conn.commit()
+        conn.close()
+        flash("تم تأكيد الكشف وتحديث سجل المريض بنجاح", "success")
+    except Exception as e:
+        flash(f"حدث خطأ: {str(e)}", "danger")
+        
     return redirect(url_for('appointments_list'))
 
 # إدارة المخزون
@@ -537,6 +600,7 @@ def my_appointments():
     
     conn.close()
     return render_template('my_appointments.html', appointments=apps)
+
 
 # تسجيل الخروج
 @app.route('/patient/logout')

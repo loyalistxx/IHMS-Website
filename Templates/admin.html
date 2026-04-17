@@ -46,32 +46,55 @@
       {% endif %}
     {% endwith %}
 
-        <div class="row">
-            <div class="col-md-3 mb-4">
-                <div class="card card-stats shadow p-3">
-                    <div class="text-muted">إجمالي المرضى</div>
-                    <div class="h3 fw-bold">1,250</div>
+        <div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-primary text-white p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-0">إجمالي المرضى</h6>
+                    <h2 class="fw-bold mb-0">{{ total_patients }}</h2>
                 </div>
-            </div>
-            <div class="col-md-3 mb-4">
-                <div class="card card-stats shadow p-3 border-success">
-                    <div class="text-muted">مواعيد اليوم</div>
-                    <div class="h3 fw-bold">42</div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-4">
-                <div class="card card-stats shadow p-3 border-warning">
-                    <div class="text-muted">نقص في الأدوية</div>
-                    <div class="h3 fw-bold">12</div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-4">
-                <div class="card card-stats shadow p-3 border-info">
-                    <div class="text-muted">صافي الإيرادات</div>
-                    <div class="h3 fw-bold">EGP 150k</div>
-                </div>
+                <i class="bi bi-people fs-1 opacity-50"></i>
             </div>
         </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-success text-white p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-0">مواعيد اليوم</h6>
+                    <h2 class="fw-bold mb-0">{{ today_apps }}</h2>
+                </div>
+                <i class="bi bi-calendar-check fs-1 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-warning text-dark p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-0">نواقص المخزون</h6>
+                    <h2 class="fw-bold mb-0">{{ low_stock }}</h2>
+                </div>
+                <i class="bi bi-exclamation-triangle fs-1 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-info text-white p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-0">كشوفات تمت</h6>
+                    <h2 class="fw-bold mb-0">{{ completed_apps }}</h2>
+                </div>
+                <i class="bi bi-check2-circle fs-1 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
 
         <div class="card shadow">
             <div class="card-header bg-white">
