@@ -5,7 +5,7 @@ from datetime import date
 app = Flask(__name__)
 app.secret_key = "secret_key_for_session"
 
-# --- 1. إعداد الاتصال بقاعدة البيانات ---
+#  إعداد الاتصال بقاعدة البيانات
 def get_db_connection():
     conn_str = (
         "Driver={SQL Server};"
@@ -14,9 +14,6 @@ def get_db_connection():
         "Trusted_Connection=yes;"
     )
     return pyodbc.connect(conn_str)
-
-# --- 2. المسارات (Routes) ---
-db = get_db_connection()
 
 # صفحة تسجيل الدخول
 @app.route('/')
@@ -48,7 +45,7 @@ def handle_login():
                 session['patient_id'] = patient.NationalID
                 session['patient_name'] = patient.FullName
                 # التوجيه للـ Dashboard وليس الـ Portal القديم
-                return redirect(url_for('patient_dashboard'))
+            return redirect(url_for('patient_portal'))
 
         flash("خطأ في اسم المستخدم أو كلمة المرور", "danger")
         return redirect(url_for('login'))
@@ -433,15 +430,16 @@ def patient_login():
             # تخزين بيانات المريض في الجلسة (Session) للتعرف عليه في الـ Dashboard
             session['patient_id'] = patient.NationalID
             session['patient_name'] = patient.FullName
-            return redirect(url_for('patient_dashboard'))
+            return redirect(url_for('patient_portal'))
         else:
             flash("الرقم القومي أو كلمة المرور غير صحيحة", "danger")
             
     return render_template('login.html')
 
 # لوحة تحكم المريض
-@app.route('/patient/dashboard')
-def patient_dashboard():
+# تغيير اسم الدالة ليتوافق مع ما تريده
+@app.route('/patient/portal')
+def patient_portal():
     # منع الدخول المباشر بدون تسجيل دخول
     if 'patient_id' not in session:
         return redirect(url_for('patient_login'))
@@ -454,8 +452,16 @@ def patient_dashboard():
     cursor.execute("SELECT * FROM Patients WHERE NationalID = ?", (p_id,))
     profile = cursor.fetchone()
     
-    # جلب المواعيد الخاصة بهذا المريض فقط
-    cursor.execute("SELECT AppointmentID, CONVERT(VARCHAR, AppDate, 23) as AppDate, LEFT(CONVERT(VARCHAR, AppTime, 108), 5) as AppTime, [Status] FROM appointments WHERE PatientID = ? ORDER BY AppDate DESC", (p_id,))
+    # جلب المواعيد
+    cursor.execute("""
+        SELECT AppointmentID, 
+               CONVERT(VARCHAR, AppDate, 23) as AppDate, 
+               LEFT(CONVERT(VARCHAR, AppTime, 108), 5) as AppTime, 
+               [Status] 
+        FROM appointments 
+        WHERE PatientID = ? 
+        ORDER BY AppDate DESC
+    """, (p_id,))
     apps = cursor.fetchall()
     
     conn.close()
@@ -501,7 +507,8 @@ def book_appointment():
 # تسجيل الخروج
 @app.route('/patient/logout')
 def patient_logout():
-    session.clear()
+    session.clear() # مسح كل بيانات الجلسة
+    flash("تم تسجيل الخروج بنجاح", "info")
     return redirect(url_for('patient_login'))
 
 
