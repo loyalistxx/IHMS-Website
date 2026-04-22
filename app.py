@@ -515,32 +515,42 @@ def patient_login():
 # تغيير اسم الدالة ليتوافق مع ما تريده
 @app.route('/patient/portal')
 def patient_portal():
-    # منع الدخول المباشر بدون تسجيل دخول
     if 'patient_id' not in session:
-        return redirect(url_for('patient_login'))
+        return redirect(url_for('login'))
     
     p_id = session['patient_id']
     conn = get_db_connection()
     cursor = conn.cursor()
-    
-    # جلب بيانات الملف الشخصي
+
+    # 1. بيانات المريض
     cursor.execute("SELECT * FROM Patients WHERE NationalID = ?", (p_id,))
-    profile = cursor.fetchone()
-    
-    # جلب المواعيد
-    cursor.execute("""
-        SELECT AppointmentID, 
-               CONVERT(VARCHAR, AppDate, 23) as AppDate, 
-               LEFT(CONVERT(VARCHAR, AppTime, 108), 5) as AppTime, 
-               [Status] 
-        FROM appointments 
-        WHERE PatientID = ? 
-        ORDER BY AppDate DESC
-    """, (p_id,))
-    apps = cursor.fetchall()
-    
+    patient = cursor.fetchone()
+
+    # 2. التشخيصات
+    cursor.execute("SELECT TOP 3 Diagnosis, VisitDate FROM MedicalRecords WHERE PatientID = ? ORDER BY VisitDate DESC", (p_id,))
+    diagnoses = cursor.fetchall()
+
+    # 3. الأدوية
+    cursor.execute("SELECT TOP 5 MedicationName, Dosage FROM Medications WHERE PatientID = ?", (p_id,))
+    medications = cursor.fetchall()
+
+    # 4. نتائج التحاليل
+    cursor.execute("SELECT TOP 3 TestName, Result FROM LabResults WHERE PatientID = ? ORDER BY TestDate DESC", (p_id,))
+    lab_results = cursor.fetchall()
+
+    # 5. المواعيد (ده الجزء اللي كان ناقص ومسبب الخطأ)
+    cursor.execute("SELECT TOP 3 AppDate, Status FROM Appointments WHERE PatientID = ? ORDER BY AppDate DESC", (p_id,))
+    appointments = cursor.fetchall()
+
     conn.close()
-    return render_template('patient_portal.html', profile=profile, appointments=apps)
+    
+    # تأكد من إضافة appointments=appointments هنا
+    return render_template('patient_portal.html', 
+                           profile=patient, 
+                           diagnoses=diagnoses, 
+                           medications=medications, 
+                           lab_results=lab_results,
+                           appointments=appointments)
 
 # حجز موعد جديد من قبل المريض
 @app.route('/patient/book', methods=['GET', 'POST'])

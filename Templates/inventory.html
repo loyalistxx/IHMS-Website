@@ -1,293 +1,294 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>IHMS - إدارة المخزون</title>
-        <link rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
-        <link
-            href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap"
-            rel="stylesheet">
-        <link rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-        <link rel="stylesheet" href="../static/stylesheet.css">
-    </head>
-    <body>
 
-        <div class="sidebar d-flex flex-column p-3">
-            <h3 class="text-center mb-4 text-primary fw-bold">IHMS</h3>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IHMS - إدارة المخزون</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../static/stylesheet.css">
+</head>
+
+<body>
+
+    <div class="sidebar d-flex flex-column p-3 vh-100 position-fixed">
+        <h1 class="text-center mb-4 text-primary fw-bold">IHMS</h3>
             <hr>
-            <ul class="nav nav-pills flex-column mb-auto">
-                <li class="nav-item"><a href="{{ url_for('admin_dashboard') }}"
-                        class="nav-link">لوحة التحكم</a></li>
-                <li><a href="{{ url_for('patients_list') }}"
-                        class="nav-link">إدارة المرضى</a></li>
-                <li><a href="{{ url_for('appointments') }}"
-                        class="nav-link">المواعيد</a></li>
-                <li><a href="{{ url_for('inventory') }}"
-                        class="nav-link active">المخزون</a></li>
+
+            <ul class="nav nav-pills flex-column mb-auto w-100 p-0">
+                <li class="nav-item w-100 mb-2">
+                    <a href="{{ url_for('admin_dashboard') }}" class="nav-link w-100 fs-5">
+                        <i class="bi bi-speedometer2 me-2"></i> لوحة التحكم
+                    </a>
+                </li>
+                <li class="nav-item w-100 mb-2">
+                    <a href="{{ url_for('patients_list') }}" class="nav-link w-100 fs-5">
+                        <i class="bi bi-people me-2"></i> إدارة المرضى
+                    </a>
+                </li>
+                <li class="nav-item w-100 mb-2">
+                    <a href="{{ url_for('appointments_list') }}" class="nav-link w-100 fs-5">
+                        <i class="bi bi-calendar-event me-2"></i> المواعيد
+                    </a>
+                </li>
+                <li class="nav-item w-100 mb-2">
+                    <a href="{{ url_for('inventory') }}" class="nav-link active w-100 fs-5">
+                        <i class="bi bi-box-seam me-2"></i> المخزون
+                    </a>
+                </li>
             </ul>
+
+            <hr>
+            <div class="mt-auto w-100">
+                <a href="{{ url_for('patient_logout') }}" class="btn btn-outline-danger w-100 py-2">
+                    <i class="bi bi-box-arrow-left me-2"></i> تسجيل الخروج
+                </a>
+            </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container mt-3">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
         </div>
 
-        <div class="main-content">
-            <div class="container mt-3">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                {% for category, message in messages %}
-                <div
-                    class="alert alert-{{ category }} alert-dismissible fade show"
-                    role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close"
-                        data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endfor %}
-                {% endif %}
-                {% endwith %}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>مخزن الأدوية والمستلزمات</h2>
             </div>
+            <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                <i class="bi bi-plus-lg"></i> إضافة صنف جديد
+            </button>
+        </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2>مخزن الأدوية والمستلزمات</h2>
-                </div>
-                <button class="btn btn-success shadow-sm" data-bs-toggle="modal"
-                    data-bs-target="#addItemModal">
-                    <i class="bi bi-plus-lg"></i> إضافة صنف جديد
-                </button>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="card p-3 shadow-sm border-0">
-                        <div class="text-muted">إجمالي الأصناف</div>
-                        <div class="h4 fw-bold">{{ total_items }}</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div
-                        class="card p-3 shadow-sm border-0 border-start border-danger border-5">
-                        <div class="text-muted">أصناف أوشكت على النفاذ</div>
-                        <div class="h4 fw-bold text-danger">{{ low_stock_count
-                            }}</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div
-                        class="card p-3 shadow-sm border-0 border-start border-warning border-5">
-                        <div class="text-muted">نقص حاد (نفذت)</div>
-                        <div class="h4 fw-bold text-warning">{{
-                            out_of_stock_count }}</div>
-                    </div>
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm border-0">
+                    <div class="text-muted">إجمالي الأصناف</div>
+                    <div class="h4 fw-bold">{{ total_items }}</div>
                 </div>
             </div>
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm border-0 border-start border-danger border-5">
+                    <div class="text-muted">أصناف أوشكت على النفاذ</div>
+                    <div class="h4 fw-bold text-danger">{{ low_stock_count
+                        }}</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm border-0 border-start border-warning border-5">
+                    <div class="text-muted">نقص حاد (نفذت)</div>
+                    <div class="h4 fw-bold text-warning">{{
+                        out_of_stock_count }}</div>
+                </div>
+            </div>
+        </div>
 
-            <div class="card shadow-sm mb-4 p-3 border-0">
-                <form class="row g-3">
-                    <div class="col-md-8">
-                        <input type="text" class="form-control"
-                            placeholder="ابحث باسم الصنف أو الكود...">
+        <div class="card shadow-sm mb-4 p-3 border-0">
+            <form class="row g-3">
+                <div">
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" id="inventorySearch" class="form-control border-start-0 ps-0"
+                            placeholder="ابحث عن دواء أو مستلزم طبي برقم الكود أو الاسم...">
                     </div>
-                    <div class="col-md-4">
-                        <select class="form-select">
-                            <option selected>كل التصنيفات</option>
-                            <option>أدوية</option>
-                            <option>مستلزمات جراحية</option>
-                            <option>أدوات معملية</option>
-                        </select>
+                </div>
+            </form>
+        </div>
+
+        <div class="card shadow-sm inventory-card p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">كود الصنف</th>
+                            <th>اسم الدواء/المستلزم</th>
+                            <th>الكمية المتاحة</th>
+                            <th>الوحدة</th>
+                            <th>تاريخ الصلاحية</th>
+                            <th>الحالة</th>
+                            <th class="text-center">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-secondary">{{
+                                item.code }}</td>
+                            <td>{{ item.name }}</td>
+                            <td>
+                                <span class="{% if item.quantity < 20 %}text-danger fw-bold{% endif %}">
+                                    {{ item.quantity }}
+                                </span>
+                            </td>
+                            <td>{{ item.unit }}</td>
+                            <td>{{ item.expiry_date }}</td>
+                            <td>
+                                {% if item.quantity > 20 %}
+                                <span class="badge bg-success-subtle text-success border border-success">متوفر</span>
+                                {% elif item.quantity > 0 %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger">مخزون
+                                    منخفض</span>
+                                {% else %}
+                                <span class="badge bg-dark-subtle text-dark border border-dark">نفذ
+                                    من المخزن</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary edit-btn" data-bs-toggle="modal"
+                                    data-bs-target="#editItemModal" data-id="{{ item.id }}" data-name="{{ item.name }}"
+                                    data-qty="{{ item.quantity }}" data-unit="{{ item.unit }}"
+                                    data-expiry="{{ item.expiry_date }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <a href="{{ url_for('delete_item', id=item.id) }}" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('هل أنت متأكد من الحذف؟')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addItemModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">إضافة صنف جديد للمخزن</h5>
+                    <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ url_for('add_inventory_item') }}" method="POST">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">كود الصنف
+                                    (SKU)</label>
+                                <input type="text" name="item_code" class="form-control" placeholder="مثلاً: MED-100"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">اسم الصنف</label>
+                                <input type="text" name="item_name" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">الكمية
+                                    الابتدائية</label>
+                                <input type="number" name="quantity" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">الوحدة</label>
+                                <select name="unit" class="form-select">
+                                    <option value="علبة">علبة</option>
+                                    <option value="شريط">شريط</option>
+                                    <option value="قطعة">قطعة</option>
+                                    <option value="زوج">زوج</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">تاريخ
+                                    الصلاحية</label>
+                                <input type="date" name="expiry_date" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-success px-4">حفظ
+                            ومزامنة</button>
                     </div>
                 </form>
             </div>
-
-            <div class="card shadow-sm inventory-card p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-4">كود الصنف</th>
-                                <th>اسم الدواء/المستلزم</th>
-                                <th>الكمية المتاحة</th>
-                                <th>الوحدة</th>
-                                <th>تاريخ الصلاحية</th>
-                                <th>الحالة</th>
-                                <th class="text-center">إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in items %}
-                            <tr>
-                                <td class="ps-4 fw-bold text-secondary">{{
-                                    item.code }}</td>
-                                <td>{{ item.name }}</td>
-                                <td>
-                                    <span
-                                        class="{% if item.quantity < 20 %}text-danger fw-bold{% endif %}">
-                                        {{ item.quantity }}
-                                    </span>
-                                </td>
-                                <td>{{ item.unit }}</td>
-                                <td>{{ item.expiry_date }}</td>
-                                <td>
-                                    {% if item.quantity > 20 %}
-                                    <span
-                                        class="badge bg-success-subtle text-success border border-success">متوفر</span>
-                                    {% elif item.quantity > 0 %}
-                                    <span
-                                        class="badge bg-danger-subtle text-danger border border-danger">مخزون
-                                        منخفض</span>
-                                    {% else %}
-                                    <span
-                                        class="badge bg-dark-subtle text-dark border border-dark">نفذ
-                                        من المخزن</span>
-                                    {% endif %}
-                                </td>
-                                <td class="text-center">
-                                    <button
-                                        class="btn btn-sm btn-outline-primary edit-btn"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#editItemModal"
-                                        data-id="{{ item.id }}"
-                                        data-name="{{ item.name }}"
-                                        data-qty="{{ item.quantity }}"
-                                        data-unit="{{ item.unit }}"
-                                        data-expiry="{{ item.expiry_date }}">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <a
-                                        href="{{ url_for('delete_item', id=item.id) }}"
-                                        class="btn btn-sm btn-outline-danger"
-                                        onclick="return confirm('هل أنت متأكد من الحذف؟')">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
+    </div>
 
-        <div class="modal fade" id="addItemModal" tabindex="-1"
-            aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content border-0 shadow">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">إضافة صنف جديد للمخزن</h5>
-                        <button type="button"
-                            class="btn-close btn-close-white m-0"
-                            data-bs-dismiss="modal"></button>
+    <div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">تعديل بيانات الصنف</h5>
+                    <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ url_for('update_inventory') }}" method="POST">
+                    <div class="modal-body">
+                        <input type="hidden" name="item_id" id="edit-id">
+                        <div class="mb-3">
+                            <label class="form-label">اسم الصنف</label>
+                            <input type="text" name="item_name" id="edit-name" class="form-control" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الكمية</label>
+                                <input type="number" name="quantity" id="edit-qty" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">تاريخ
+                                    الصلاحية</label>
+                                <input type="date" name="expiry_date" id="edit-expiry" class="form-control">
+                            </div>
+                        </div>
                     </div>
-                    <form action="{{ url_for('add_inventory_item') }}"
-                        method="POST">
-                        <div class="modal-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">كود الصنف
-                                        (SKU)</label>
-                                    <input type="text" name="item_code"
-                                        class="form-control"
-                                        placeholder="مثلاً: MED-100" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">اسم الصنف</label>
-                                    <input type="text" name="item_name"
-                                        class="form-control" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">الكمية
-                                        الابتدائية</label>
-                                    <input type="number" name="quantity"
-                                        class="form-control" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">الوحدة</label>
-                                    <select name="unit" class="form-select">
-                                        <option value="علبة">علبة</option>
-                                        <option value="شريط">شريط</option>
-                                        <option value="قطعة">قطعة</option>
-                                        <option value="زوج">زوج</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">تاريخ
-                                        الصلاحية</label>
-                                    <input type="date" name="expiry_date"
-                                        class="form-control">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer bg-light">
-                            <button type="button" class="btn btn-secondary"
-                                data-bs-dismiss="modal">إلغاء</button>
-                            <button type="submit"
-                                class="btn btn-success px-4">حفظ
-                                ومزامنة</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="editItemModal" tabindex="-1"
-            aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">تعديل بيانات الصنف</h5>
-                        <button type="button"
-                            class="btn-close btn-close-white m-0"
-                            data-bs-dismiss="modal"></button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ
+                            التغييرات</button>
                     </div>
-                    <form action="{{ url_for('update_inventory') }}"
-                        method="POST">
-                        <div class="modal-body">
-                            <input type="hidden" name="item_id" id="edit-id">
-                            <div class="mb-3">
-                                <label class="form-label">اسم الصنف</label>
-                                <input type="text" name="item_name"
-                                    id="edit-name" class="form-control"
-                                    required>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">الكمية</label>
-                                    <input type="number" name="quantity"
-                                        id="edit-qty" class="form-control"
-                                        required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">تاريخ
-                                        الصلاحية</label>
-                                    <input type="date" name="expiry_date"
-                                        id="edit-expiry" class="form-control">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary"
-                                data-bs-dismiss="modal">إلغاء</button>
-                            <button type="submit" class="btn btn-primary">حفظ
-                                التغييرات</button>
-                        </div>
-                    </form>
-                </div>
+                </form>
             </div>
         </div>
+    </div>
 
-        <script>
-    const editButtons = document.querySelectorAll('.edit-btn');
-    editButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.getElementById('edit-id').value = this.getAttribute('data-id');
-            document.getElementById('edit-name').value = this.getAttribute('data-name');
-            document.getElementById('edit-qty').value = this.getAttribute('data-qty');
-            document.getElementById('edit-expiry').value = this.getAttribute('data-expiry');
+    <script>
+        const editButtons = document.querySelectorAll('.edit-btn');
+        editButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.getElementById('edit-id').value = this.getAttribute('data-id');
+                document.getElementById('edit-name').value = this.getAttribute('data-name');
+                document.getElementById('edit-qty').value = this.getAttribute('data-qty');
+                document.getElementById('edit-expiry').value = this.getAttribute('data-expiry');
+            });
         });
-    });
-</script>
+    </script>
 
-        <script
-            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('inventorySearch').addEventListener('keyup', function () {
+            // 1. جلب الكلمة المكتوبة وتحويلها لحروف صغيرة
+            let filter = this.value.toLowerCase();
+
+            // 2. الوصول لصفوف جدول المخزون
+            let rows = document.querySelectorAll('table tbody tr');
+
+            rows.forEach(row => {
+                // 3. جلب النص من الأعمدة (اسم الصنف والكود)
+                // نستخدم العمود الأول (الكود) والثاني (الاسم)
+                let itemCode = row.cells[0].textContent.toLowerCase();
+                let itemName = row.cells[1].textContent.toLowerCase();
+
+                // 4. التحقق إذا كانت الكلمة موجودة في أي منهما
+                if (itemCode.includes(filter) || itemName.includes(filter)) {
+                    row.style.display = ""; // إظهار الصف
+                } else {
+                    row.style.display = "none"; // إخفاء الصف
+                }
+            });
+        });
+    </script>
+</body>
+
 </html>

@@ -11,20 +11,40 @@
     </head>
     <body>
 
-        <div class="sidebar d-flex flex-column p-3">
-            <h3 class="text-center mb-4 text-primary fw-bold">IHMS</h3>
-            <hr>
-            <ul class="nav nav-pills flex-column mb-auto">
-                <li><a href="{{ url_for('admin_dashboard') }}"
-                        class="nav-link">لوحة التحكم</a></li>
-                <li><a href="{{ url_for('patients_list') }}"
-                        class="nav-link active">إدارة المرضى</a></li>
-                <li><a href="{{ url_for('appointments') }}"
-                        class="nav-link">المواعيد</a></li>
-                <li><a href="{{ url_for('inventory') }}"
-                        class="nav-link">المخزون</a></li>
-            </ul>
+        <div class="sidebar d-flex flex-column p-3 vh-100 position-fixed">
+        <h1 class="text-center mb-4 text-primary fw-bold">IHMS</h3>
+        <hr>
+
+        <ul class="nav nav-pills flex-column mb-auto w-100 p-0">
+            <li class="nav-item w-100 mb-2">
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link w-100 fs-5">
+                    <i class="bi bi-speedometer2 me-2"></i> لوحة التحكم
+                </a>
+            </li>
+            <li class="nav-item w-100 mb-2">
+                <a href="{{ url_for('patients_list') }}" class="nav-link active  w-100 fs-5">
+                    <i class="bi bi-people me-2"></i> إدارة المرضى
+                </a>
+            </li>
+            <li class="nav-item w-100 mb-2">
+                <a href="{{ url_for('appointments_list') }}" class="nav-link w-100 fs-5">
+                    <i class="bi bi-calendar-event me-2"></i> المواعيد
+                </a>
+            </li>
+            <li class="nav-item w-100 mb-2">
+                <a href="{{ url_for('inventory') }}" class="nav-link w-100 fs-5">
+                    <i class="bi bi-box-seam me-2"></i> المخزون
+                </a>
+            </li>
+        </ul>
+
+        <hr>
+        <div class="mt-auto w-100">
+            <a href="{{ url_for('patient_logout') }}" class="btn btn-outline-danger w-100 py-2">
+                <i class="bi bi-box-arrow-left me-2"></i> تسجيل الخروج
+            </a>
         </div>
+    </div>
 
         <div class="main-content">
             <div class="d-flex justify-content-between align-items-center mb-4">
