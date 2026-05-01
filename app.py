@@ -3,6 +3,7 @@ import pyodbc
 from datetime import date
 
 app = Flask(__name__)
+
 app.secret_key = "secret_key_for_session"
 
 #  إعداد الاتصال بقاعدة البيانات
@@ -16,8 +17,12 @@ def get_db_connection():
     # إذا لم يعمل Driver 17، جرب SQL Server Native Client 11.0
     return pyodbc.connect(conn_str)
 
-# صفحة تسجيل الدخول
+# صفحة الرئيسية
 @app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/login')
 def login():
     return render_template('login.html')
 

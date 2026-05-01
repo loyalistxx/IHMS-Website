@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IHMS - نظام إدارة المستشفى المتكامل</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: linear-gradient(rgba(0, 123, 255, 0.8), rgba(0, 123, 255, 0.8)), 
+                        url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            height: 100vh;
+            color: white;
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">IHMS</a>
+            <div class="d-flex">
+                <a href="/login" class="btn btn-outline-light">تسجيل الدخول</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero-section">
+        <div class="container text-center text-md-start">
+            <div class="row">
+                <div class="col-lg-6">
+                    <h1 class="display-3 fw-bold mb-4">مرحباً بكم في نظام IHMS</h1>
+                    <p class="lead mb-5">الحل المتكامل لإدارة الموارد الطبية، السجلات الصحية، والمخازن بكفاءة واحترافية عالية.</p>
+                    <div class="d-grid gap-3 d-md-flex">
+                        <a href="/login" class="btn btn-light btn-lg px-5 fw-bold">ابدأ الآن</a>
+                        <a href="#features" class="btn btn-outline-light btn-lg px-5">تعرف علينا</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5 bg-light">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">مميزات النظام</h2>
+                <hr class="mx-auto bg-primary" style="width: 50px; height: 3px;">
+            </div>
+            <div class="row g-4 text-center">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm p-4">
+                        <h3 class="h5 fw-bold">إدارة المواعيد</h3>
+                        <p class="text-muted">تنظيم حجوزات المرضى وتنسيق جداول الأطباء بدقة.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm p-4">
+                        <h3 class="h5 fw-bold">السجلات الطبية</h3>
+                        <p class="text-muted">أرشفة كاملة لتشخيصات المرضى وتاريخهم العلاجي.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm p-4">
+                        <h3 class="h5 fw-bold">مراقبة المخزون</h3>
+                        <p class="text-muted">تتبع لحظي للأدوية والمستلزمات الطبية وتنبيهات النفاذ.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-4 bg-dark text-white text-center">
+        <p class="mb-0">© 2026 نظام IHMS - جميع الحقوق محفوظة</p>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
