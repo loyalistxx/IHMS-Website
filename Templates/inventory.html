@@ -53,7 +53,11 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
             {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {# إضافة alert-important أو التأكد من أن category هي success/danger/warning #}
+            <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show shadow-sm"
+                role="alert">
+                <i
+                    class="bi {% if category == 'success' %}bi-check-circle{% elif category == 'danger' %}bi-exclamation-triangle{% else %}bi-info-circle{% endif %} me-2"></i>
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -95,14 +99,17 @@
         </div>
 
         <div class="card shadow-sm mb-4 p-3 border-0">
-            <form class="row g-3">
-                <div">
+            <!-- تعديل الـ form ليقوم بإرسال طلب للسيرفر -->
+            <form class="row g-3" method="GET" action="{{ url_for('inventory') }}">
+                <div class="col-12">
                     <div class="input-group shadow-sm">
                         <span class="input-group-text bg-white border-end-0">
                             <i class="bi bi-search text-muted"></i>
                         </span>
-                        <input type="text" id="inventorySearch" class="form-control border-start-0 ps-0"
-                            placeholder="ابحث عن دواء أو مستلزم طبي برقم الكود أو الاسم...">
+                        <!-- إضافة name="search" و value للحفاظ على النص المكتوب -->
+                        <input type="text" name="search" class="form-control border-start-0 ps-0"
+                            placeholder="ابحث عن دواء أو مستلزم طبي برقم الكود أو الاسم..." value="{{ search_query }}">
+                        <button class="btn btn-primary" type="submit">بحث</button>
                     </div>
                 </div>
             </form>
@@ -162,6 +169,42 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                <!-- نظام التنقل بين الصفحات -->
+                <nav aria-label="Inventory Page Navigation" class="mt-4">
+                    <ul class="pagination justify-content-center shadow-sm">
+
+                        {# زر الصفحة السابقة - يتم تعطيله إذا كنا في الصفحة الأولى #}
+                        <li class="page-item {{ 'disabled' if page <= 1 }}">
+                            <a class="page-link" href="{{ url_for('inventory', page=page-1, search=search_query)  }}"
+                                tabindex="-1">السابق</a>
+                        </li>
+
+                        {# عرض أرقام الصفحات #}
+                        {% for p in range(1, total_pages + 1) %}
+                        {# عرض أول صفحة، آخر صفحة، والصفحات القريبة من الصفحة الحالية فقط لتجنب الزحام #}
+                        {% if p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %} <li
+                            class="page-item {{ 'active' if p == page }}">
+                            <a class="page-link" href="{{ url_for('inventory', page=p, search=search_query) }}">{{ p
+                                }}</a>
+                            </li>
+                            {% elif p == page - 3 or p == page + 3 %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
+                            {% endfor %}
+
+                            {# زر الصفحة التالية - يتم تعطيله إذا وصلنا لآخر صفحة #}
+                            <li class="page-item {{ 'disabled' if page >= total_pages }}">
+                                <a class="page-link"
+                                    href="{{ url_for('inventory', page=page+1, search=search_query) }}">التالي</a>
+                            </li>
+
+                    </ul>
+                </nav>
+
+                <div class="text-center text-muted mt-2">
+                    <small>عرض الصفحة {{ page }} من إجمالي {{ total_pages }} صفحة</small>
+                </div>
+
             </div>
         </div>
     </div>
@@ -266,29 +309,6 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.getElementById('inventorySearch').addEventListener('keyup', function () {
-            // 1. جلب الكلمة المكتوبة وتحويلها لحروف صغيرة
-            let filter = this.value.toLowerCase();
-
-            // 2. الوصول لصفوف جدول المخزون
-            let rows = document.querySelectorAll('table tbody tr');
-
-            rows.forEach(row => {
-                // 3. جلب النص من الأعمدة (اسم الصنف والكود)
-                // نستخدم العمود الأول (الكود) والثاني (الاسم)
-                let itemCode = row.cells[0].textContent.toLowerCase();
-                let itemName = row.cells[1].textContent.toLowerCase();
-
-                // 4. التحقق إذا كانت الكلمة موجودة في أي منهما
-                if (itemCode.includes(filter) || itemName.includes(filter)) {
-                    row.style.display = ""; // إظهار الصف
-                } else {
-                    row.style.display = "none"; // إخفاء الصف
-                }
-            });
-        });
-    </script>
 </body>
 
 </html>

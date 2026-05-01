@@ -374,41 +374,70 @@ def complete_appointment(app_id):
     return redirect(url_for('appointments_list'))
 
 # إدارة المخزون
-@app.route('/inventory')
+@app.get('/inventory')
 def inventory():
+    # 1. جلب متغيرات البحث والصفحة من الرابط
+    search_query = request.args.get('search', '').strip()
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # 1. تأكد من جلب العمود 'id' من الجدول
-    cursor.execute("SELECT id, item_code, item_name, quantity, unit, expiry_date FROM Inventory")
+    # 2. بناء استعلام البحث (البحث في الاسم أو الكود)
+    base_sql = "FROM Inventory"
+    params = []
+    
+    if search_query:
+        base_sql += " WHERE item_name LIKE ? OR item_code LIKE ?"
+        params.extend([f'%{search_query}%', f'%{search_query}%'])
+
+    # 3. حساب إجمالي العناصر بناءً على البحث
+    cursor.execute(f"SELECT COUNT(*) {base_sql}", params)
+    total_items = cursor.fetchone()[0]
+    total_pages = (total_items + per_page - 1) // per_page if total_items > 0 else 1
+
+    # 4. جلب البيانات المفلترة مع Pagination (متوافق مع SQL Server)
+    # نكرر البارامترات لأننا نستخدمها مرة أخرى في استعلام البيانات
+    data_params = params + [offset, per_page]
+    query = f"""
+        SELECT id, item_code, item_name, quantity, unit, expiry_date 
+        {base_sql}
+        ORDER BY id DESC
+        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+    """
+    cursor.execute(query, data_params)
     rows = cursor.fetchall()
     
-    items = []
-    low_stock_count = 0
-    out_of_stock_count = 0
+    # 5. حساب النواقص (للمخزن بالكامل بغض النظر عن البحث)
+    cursor.execute("SELECT COUNT(*) FROM Inventory WHERE quantity > 0 AND quantity < 20")
+    low_stock_count = cursor.fetchone()[0]
     
+    cursor.execute("SELECT COUNT(*) FROM Inventory WHERE quantity <= 0")
+    out_of_stock_count = cursor.fetchone()[0]
+
+    items = []
     for row in rows:
-        item = {
-            'id': row.id,              # 2. هذا هو السطر الناقص الذي يسبب الخطأ
+        items.append({
+            'id': row.id,
             'code': row.item_code,
             'name': row.item_name,
             'quantity': row.quantity,
             'unit': row.unit,
             'expiry_date': row.expiry_date
-        }
-        items.append(item)
-        
-        if row.quantity <= 0:
-            out_of_stock_count += 1
-        elif row.quantity < 20:
-            low_stock_count += 1
+        })
 
     conn.close()
+    
     return render_template('inventory.html', 
                            items=items, 
-                           total_items=len(items), 
+                           total_items=total_items, 
                            low_stock_count=low_stock_count, 
-                           out_of_stock_count=out_of_stock_count)
+                           out_of_stock_count=out_of_stock_count,
+                           page=page,
+                           total_pages=total_pages,
+                           search_query=search_query) # نرسل نص البحث ليبقى في الخانة
     
 # إضافة صنف جديد إلى المخزون
 @app.route('/inventory/add', methods=['POST'])
