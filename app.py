@@ -76,14 +76,23 @@ def admin_dashboard():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # 1. جلب الإحصائيات (البطاقات العلوية)
+    # 1. إجمالي المرضى
     cursor.execute("SELECT COUNT(*) FROM Patients")
     total_patients = cursor.fetchone()[0]
 
+    # 2. مواعيد اليوم
     cursor.execute("SELECT COUNT(*) FROM appointments WHERE AppDate = CAST(GETDATE() AS DATE)")
     today_apps = cursor.fetchone()[0]
 
-    # 2. جلب آخر 5 مواعيد لعرضها في الجدول
+    # 3. نواقص المخزون (الأصناف التي كميتها أقل من 20 مثلاً)
+    cursor.execute("SELECT COUNT(*) FROM Inventory WHERE quantity > 0 AND quantity < 20")
+    low_stock = cursor.fetchone()[0]
+
+    # 4. كشوفات تمت (إجمالي المواعيد التي حالتها 'تم الكشف')
+    cursor.execute("SELECT COUNT(*) FROM appointments WHERE [Status] = N'تم الكشف'")
+    completed_apps = cursor.fetchone()[0]
+
+    # 5. جلب آخر 5 مواعيد لعرضها في الجدول
     query_latest = """
     SELECT TOP 5 p.FullName, 
            CONVERT(VARCHAR, a.AppDate, 23) AS AppDate, 
@@ -102,16 +111,16 @@ def admin_dashboard():
             'patient_name': row[0],
             'date': row[1],
             'time': row[2],
-            'status': row[3]  # تم تعديلها من row[5] إلى row[3]
+            'status': row[3]
         })
 
     conn.close()
     return render_template('admin.html', 
                            total_patients=total_patients,
                            today_apps=today_apps,
-                           latest_appointments=latest_appointments, # المتغير المهم هنا
-                           low_stock=3, # قيم تجريبية حالياً
-                           completed_apps=0)
+                           low_stock=low_stock,
+                           completed_apps=completed_apps,
+                           latest_appointments=latest_appointments)
 
 # إدارة المرضى (العرض + البحث) - دالة واحدة فقط
 @app.route('/admin/patients')
