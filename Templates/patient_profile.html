@@ -11,6 +11,7 @@
         <link
             href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap"
             rel="stylesheet">
+                <link rel="stylesheet" href="../static/stylesheet.css">
         <style>
         body { font-family: 'Cairo', sans-serif; background-color: #f0f2f5; padding-bottom: 80px; }
         .profile-header { background: linear-gradient(135deg, #0d6efd, #0a58ca); color: white; padding: 40px 20px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; }
@@ -84,28 +85,24 @@
             </div>
         </div>
 
-        <div
-            class="fixed-bottom bg-white border-top d-flex justify-content-around py-3 shadow">
-            <a href="{{ url_for('patient_portal') }}"
-                class="text-center text-decoration-none text-muted">
-                <i class="bi bi-house-door d-block fs-4"></i>
-                <small>الرئيسية</small>
-            </a>
-            <a href="{{ url_for('my_appointments') }}"
-                class="text-center text-decoration-none text-muted">
-                <i class="bi bi-calendar-check d-block fs-4"></i>
-                <small>مواعيدي</small>
-            </a>
-            <a href="{{ url_for('patient_profile') }}"
-                class="text-center text-decoration-none text-primary">
-                <i class="bi bi-person-fill d-block fs-4"></i>
-                <small>ملفي</small>
-            </a>
-            <a href="{{ url_for('patient_logout') }}" class="text-center text-decoration-none text-primary">
-                <i class="bi bi-box-arrow-left d-block fs-4 text-danger"></i>
-                <span>خروج</span>
-            </a>
-        </div>
+        <div class="bottom-nav shadow">
+        <a href="{{ url_for('patient_portal') }}" class="nav-item ">
+            <i class="bi bi-house-door fs-4 d-block"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('patient_profile') }}" class="nav-item active">
+            <i class="bi bi-person-circle fs-4 d-block"></i>
+            <span>ملفي الطبي</span>
+        </a>
+        <a href="{{ url_for('my_appointments') }}" class="nav-item">
+            <i class="bi bi-calendar-check fs-4 d-block"></i>
+            <span>مواعيدي</span>
+        </a>
+        <a href="{{ url_for('patient_logout') }}" class="nav-item">
+            <i class="bi bi-box-arrow-left fs-4 d-block text-danger"></i>
+            <span>خروج</span>
+        </a>
+    </div>
 
     </body>
 </html>

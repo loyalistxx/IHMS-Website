@@ -183,3 +183,8 @@
             font-size: 24px;
             display: block;
         }
+
+        .badge-cancelled {
+            background-color: #fceaea;
+            color: #dc3545;
+        }

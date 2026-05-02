@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import pyodbc
-from datetime import date
+from datetime import datetime, date
 
 app = Flask(__name__)
 
@@ -38,21 +38,28 @@ def handle_login():
         cursor = conn.cursor()
 
         if role == 'admin':
-            cursor.execute("SELECT * FROM Users WHERE Username = ? AND Password = ?", (username, password))
-            user = cursor.fetchone()
-            if user:
-                session['admin_logged_in'] = True # إضافة علامة للأدمن
+            # نبحث عن المدير في جدول Users
+            cursor.execute("SELECT Username, FullName FROM Users WHERE Username = ? AND Password = ?", (username, password))
+            admin = cursor.fetchone()
+            
+            if admin:
+                session['admin_logged_in'] = True
+                # تخزين اسم المستخدم أو الاسم الكامل لعرضه في الترحيب
+                session['admin_username'] = admin.Username
+                session['admin_name'] = admin.FullName if hasattr(admin, 'FullName') else admin.Username
+                
                 return redirect(url_for('admin_dashboard'))
         else:
-            # تسجيل دخول المريض من الصفحة الرئيسية
-            cursor.execute("SELECT * FROM Patients WHERE NationalID = ? AND [Password] = ?", (username, password))
+            # تسجيل دخول المريض
+            cursor.execute("SELECT NationalID, FullName FROM Patients WHERE NationalID = ? AND [Password] = ?", (username, password))
             patient = cursor.fetchone()
+            
             if patient:
                 session['patient_id'] = patient.NationalID
                 session['patient_name'] = patient.FullName
-                # التوجيه للـ Dashboard وليس الـ Portal القديم
-            return redirect(url_for('patient_portal'))
+                return redirect(url_for('patient_portal'))
 
+        # إذا لم يجد المستخدم في الحالتين
         flash("خطأ في اسم المستخدم أو كلمة المرور", "danger")
         return redirect(url_for('login'))
 
@@ -60,7 +67,8 @@ def handle_login():
         print(f"Database Error: {e}")
         flash("حدث خطأ في الاتصال بقاعدة البيانات", "warning")
         return redirect(url_for('login'))
-
+    finally:
+        conn.close()
 # لوحة التحكم
 # لوحة التحكم المحدثة
 @app.route('/admin/dashboard')
@@ -601,15 +609,29 @@ def patient_login():
 
 # لوحة تحكم المريض
 # تغيير اسم الدالة ليتوافق مع ما تريده
-@app.route('/patient/portal')
+@app.route('/patient/dashboard')
 def patient_portal():
-    if 'patient_id' not in session:
+    patient_id = session.get('patient_id')
+    if not patient_id:
         return redirect(url_for('login'))
+    
+    now_date = datetime.now().strftime('%Y-%m-%d')
     
     p_id = session['patient_id']
     conn = get_db_connection()
     cursor = conn.cursor()
-
+    
+    cursor.execute("""
+        SELECT TOP 1 AppDate, AppTime, Status 
+        FROM Appointments 
+        WHERE PatientID = ? 
+        AND Status = N'قادم' 
+        AND AppDate >= ?
+        ORDER BY AppDate ASC, AppTime ASC
+    """, (patient_id, now_date))
+    
+    upcoming_appointment = cursor.fetchone()
+    
     # 1. بيانات المريض
     cursor.execute("SELECT * FROM Patients WHERE NationalID = ?", (p_id,))
     patient = cursor.fetchone()
@@ -633,7 +655,8 @@ def patient_portal():
     conn.close()
     
     # تأكد من إضافة appointments=appointments هنا
-    return render_template('patient_portal.html', 
+    return render_template('patient_portal.html',
+                           appointment=upcoming_appointment, 
                            profile=patient, 
                            diagnoses=diagnoses, 
                            medications=medications, 
@@ -711,8 +734,45 @@ def my_appointments():
     conn.close()
     return render_template('my_appointments.html', appointments=apps)
 
-# تأكيد الكشف وتحديث سجل المريض تلقائياً من قبل الأدمن
+@app.route('/cancel_appointment/<int:appointment_id>')
+def cancel_appointment(appointment_id):
+    patient_id = session.get('patient_id')
+    if not patient_id:
+        return redirect(url_for('login'))
 
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # تحويل المعرفات إلى int للتأكد من توافقها مع قاعدة البيانات
+        app_id = int(appointment_id)
+        p_id = int(patient_id)
+
+        # تنفيذ التحديث
+        cursor.execute("""
+            UPDATE Appointments 
+            SET Status = N'ملغي' 
+            WHERE AppointmentID = ? AND PatientID = ? AND Status = N'قادم'
+        """, (app_id, p_id))
+        
+        conn.commit()
+        
+        # التأكد إذا كان هناك سطر تأثر فعلاً (لو لم يتأثر سطر يعني الشرط لم يتحقق)
+        if cursor.rowcount == 0:
+            flash("لم يتم العثور على الموعد أو لا يمكن إلغاؤه", "warning")
+        else:
+            flash("تم إلغاء الموعد بنجاح", "success")
+
+    except Exception as e:
+        # هذا السطر سيطبع لك الخطأ الحقيقي في شاشة الـ VS Code أو الـ CMD
+        print("SQL Error details:", str(e)) 
+        flash(f"حدث خطأ برمجى: {str(e)}", "danger")
+    finally:
+        if conn:
+            conn.close()
+            
+    return redirect(url_for('my_appointments'))
 
 # عرض الملف الشخصي للمريض
 @app.route('/patient/profile')

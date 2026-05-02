@@ -51,7 +51,10 @@
     <div class="main-content">
         <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4 rounded">
             <div class="container-fluid">
-                <span class="navbar-brand">مرحباً، م. أدهم إبراهيم</span>
+                <div class="welcome-section">
+                    <h2>مرحباً بك، {{ session.get('admin_name', 'المدير') }}!</h2>
+                    <p class="text-muted">نظام إدارة المستشفى المتكامل (IHMS)</p>
+                </div>
             </div>
         </nav>
         {% with messages = get_flashed_messages(with_categories=true) %}
