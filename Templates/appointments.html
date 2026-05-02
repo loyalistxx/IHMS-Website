@@ -92,7 +92,7 @@
                                 <span class="badge rounded-pill bg-warning text-dark">قادم</span>
                                 {% elif app.status == 'تم الكشف' %}
                                 <span class="badge rounded-pill bg-success">تم الكشف</span>
-                                {% elif app.status == 'الغاء' %}
+                                {% elif app.status == 'ملغي' %}
                                 <span class="badge rounded-pill bg-danger">ملغي</span>
                                 {% endif %}
                             </td>
@@ -181,7 +181,7 @@
                         </div>
                     </div>
                     <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">الغاء</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ملغي</button>
                         <button type="submit" class="btn btn-primary">تأكيد
                             الحجز</button>
                     </div>
@@ -202,7 +202,7 @@
                         <select name="status" id="statusSelect" class="form-select">
                             <option value="قادم">قادم</option>
                             <option value="تم الكشف">تم الكشف</option>
-                            <option value="الغاء">الغاء</option>
+                            <option value="ملغي">ملغي</option>
                         </select>
                     </div>
                     <div class="modal-footer">
