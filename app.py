@@ -124,6 +124,12 @@ def patients_list():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    cursor.execute("SELECT item_name FROM Inventory WHERE quantity > 0")
+    inventory_meds = [r[0] for r in cursor.fetchall()]
+
+    cursor.execute("SELECT Username, FullName FROM Users WHERE role = 'Doctor'")
+    staff_members = [{"username": r[0], "name": r[1]} for r in cursor.fetchall()]
+
     # استعلام البحث
     if search_query:
         sql = """
@@ -163,6 +169,8 @@ def patients_list():
 
     return render_template('patients.html', 
                            patients=patients, 
+                           staff=staff_members,
+                           inventory_meds=inventory_meds,
                            page=page, 
                            total_pages=total_pages, 
                            search_query=search_query)
@@ -683,7 +691,7 @@ def book_appointment():
             # إدخال الموعد الجديد بـ Status افتراضي 'قادم'
             query = """
                 INSERT INTO appointments (PatientID, AppDate, AppTime, [Status], Notes)
-                VALUES (?, ?, ?, 'قادم', ?)
+                VALUES (?, ?, ?, N'قادم', ?)
             """
             cursor.execute(query, (p_id, app_date, app_time, notes))
             conn.commit()
@@ -784,12 +792,145 @@ def patient_profile():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # جلب كافة بيانات المريض
-    cursor.execute("SELECT * FROM Patients WHERE NationalID = ?", (p_id,))
-    patient = cursor.fetchone()
+    query_basic = """
+    SELECT p.*, 
+           (SELECT TOP 1 AppDate FROM appointments WHERE PatientID = p.NationalID ORDER BY AppDate DESC) as LastVisit,
+           (SELECT TOP 1 Notes FROM appointments WHERE PatientID = p.NationalID AND Notes IS NOT NULL AND Notes != '' ORDER BY AppDate DESC) as LastNotes
+    FROM Patients p WHERE p.NationalID = ?
+    """
+    
+    cursor.execute(query_basic, (p_id,))
+    columns = [column[0] for column in cursor.description]
+    row = cursor.fetchone()
+    patient_data = dict(zip(columns, row)) if row else None
+    
+    if not patient_data:
+        conn.close()
+        return redirect(url_for('patient_portal'))
+
+    # 2. جلب التشخيصات (النتائج)
+    cursor.execute("SELECT Diagnosis, VisitDate FROM MedicalRecords WHERE PatientID = ? ORDER BY VisitDate DESC", (p_id,))
+    diagnoses = [{"diagnosis": r[0], "date": r[1]} for r in cursor.fetchall()]
+
+    # 3. جلب الأدوية
+    cursor.execute("SELECT MedicationName, Dosage FROM Medications WHERE PatientID = ?", (p_id,))
+    medications = [{"name": r[0], "dosage": r[1]} for r in cursor.fetchall()]
+
+    # 4. جلب نتائج التحاليل (التقارير)
+    cursor.execute("SELECT TestName, Result FROM LabResults WHERE PatientID = ? ORDER BY TestDate DESC", (p_id,))
+    lab_results = [{"test": r[0], "result": r[1]} for r in cursor.fetchall()]
+
     conn.close()
     
-    return render_template('patient_profile.html', patient=patient)
+    return render_template('patient_profile.html',
+                           patient=patient_data, 
+                           diagnoses=diagnoses, 
+                           medications=medications, 
+                           lab_results=lab_results)
+    
+# إدارة التشخيصات (إضافة/حذف) من قبل الأدمن    
+@app.route('/admin/diagnosis/<action>/<patient_id>', methods=['POST'])
+def manage_diagnosis(action, patient_id):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('login'))
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        if action == 'add':
+            diagnosis = request.form.get('diagnosis')
+            # جدول MedicalRecords اللي إنت بتستخدمه في الـ Dashboard
+            cursor.execute("""
+                INSERT INTO MedicalRecords (PatientID, Diagnosis, VisitDate) 
+                VALUES (?, ?, GETDATE())
+            """, (patient_id, diagnosis))
+            flash("تم إضافة التشخيص بنجاح", "success")
+            
+        elif action == 'delete':
+            # هنمسح بناءً على معرف السجل الفرعي (لو متاح) أو آخر سجل للمريض
+            record_id = request.form.get('record_id')
+            cursor.execute("DELETE FROM MedicalRecords WHERE RecordID = ?", (record_id,))
+            flash("تم حذف التشخيص", "info")
+            
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"Error in manage_diagnosis: {e}")
+        flash("حدث خطأ أثناء معالجة البيانات", "danger")
+    finally:
+        conn.close()
+        
+    return redirect(url_for('patients_list'))
+
+@app.route('/admin/lab_results/<action>/<patient_id>', methods=['POST'])
+def manage_lab_results(action, patient_id):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('login'))
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        if action == 'add':
+            test_name = request.form.get('test_name')
+            result = request.form.get('result')
+            added_by = request.form.get('added_by')
+            
+            cursor.execute("""
+                INSERT INTO LabResults (PatientID, TestName, Result, TestDate, AddedBy) 
+                VALUES (?, ?, ?, GETDATE(), ?)
+            """, (patient_id, test_name, result, added_by))
+            flash("تم تسجيل نتيجة التحليل بنجاح", "success")
+            
+        elif action == 'delete':
+            # الحذف بيتم عن طريق معرف السجل الفريد للتحليل
+            lab_id = request.form.get('lab_id')
+            cursor.execute("DELETE FROM LabResults WHERE LabID = ?", (lab_id,))
+            flash("تم حذف نتيجة التحليل", "info")
+            
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"Error in manage_lab_results: {e}")
+        flash("حدث خطأ أثناء معالجة بيانات التحاليل", "danger")
+    finally:
+        conn.close()
+        
+    return redirect(url_for('patients_list'))
+
+@app.route('/admin/medications/<action>/<patient_id>', methods=['POST'])
+def manage_medications(action, patient_id):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('login'))
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        if action == 'add':
+            med_name = request.form.get('medication_name')
+            dosage = request.form.get('dosage')
+            prescribed_by = request.form.get('prescribed_by')
+            
+            # تأكد من أن أسماء الأعمدة (PatientID, MedicationName...) 
+            # هي نفس الأسماء الموجودة في جدول Medications عندك
+            cursor.execute("""
+                INSERT INTO Medications (PatientID, MedicationName, Dosage, PrescribedBy, DatePrescribed) 
+                VALUES (?, ?, ?, ?, GETDATE())
+            """, (patient_id, med_name, dosage, prescribed_by))
+            
+            flash("تم إضافة الدواء للروشتة بنجاح", "success")
+            
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"Error Details: {e}") # هذا سيطبع الخطأ الحقيقي في الـ Terminal عندك
+        flash("حدث خطأ أثناء معالجة بيانات الأدوية", "danger")
+    finally:
+        conn.close()
+        
+    return redirect(url_for('patients_list'))
 
 # تسجيل الخروج
 @app.route('/patient/logout')

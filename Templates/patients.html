@@ -95,6 +95,18 @@
                         <td><span class="badge bg-info text-dark">{{
                                 patient.blood_type }}</span></td>
                         <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                data-bs-target="#addDiag{{ patient.national_id }}">
+                                <i class="bi bi-plus-circle"></i> تشخيص
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal"
+                                data-bs-target="#addLab{{ patient.national_id }}">
+                                <i class="bi bi-flask"></i> تحليل
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
+                                data-bs-target="#addMed{{ patient.national_id }}">
+                                <i class="bi bi-capsule"></i> دواء
+                            </button>
                             <button class="btn btn-sm btn-outline-primary edit-patient-btn" data-bs-toggle="modal"
                                 data-bs-target="#editPatientModal" data-id="{{ patient.national_id }}"
                                 data-name="{{ patient.name }}" data-phone="{{ patient.phone }}"
@@ -110,6 +122,130 @@
                             </a>
                         </td>
                     </tr>
+                    <!-- نموذج إضافة تشخيص جديد -->
+                    <div class="modal fade" id="addDiag{{ patient.national_id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form
+                                    action="{{ url_for('manage_diagnosis', action='add', patient_id=patient.national_id) }}"
+                                    method="POST">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">إضافة تشخيص لـ {{ patient.name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">التشخيص الطبي</label>
+                                            <textarea name="diagnosis" class="form-control" rows="3" required
+                                                placeholder="اكتب التشخيص هنا..."></textarea>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">بواسطة (الطبيب/الأخصائي)</label>
+                                            <select name="diagnosed_by" class="form-select" required>
+                                                <option value="" selected disabled>اختر الطبيب...</option>
+                                                {% for member in staff %}
+                                                <option value="{{ member.username }}">{{ member.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">إلغاء</button>
+                                        <button type="submit" class="btn btn-primary">حفظ التشخيص</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- نموذج إضافة تحليل جديد -->
+                    <div class="modal fade" id="addLab{{ patient.national_id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <!-- لاحظ الـ action هنا بياخد 'add' -->
+                                <form
+                                    action="{{ url_for('manage_lab_results', action='add', patient_id=patient.national_id) }}"
+                                    method="POST">
+                                    <div class="modal-header bg-success text-white">
+                                        <h5 class="modal-title">تسجيل تحليل لـ {{ patient.name }}</h5>
+                                        <button type="button" class="btn-close btn-close-white"
+                                            data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">اسم التحليل</label>
+                                            <input type="text" name="test_name" class="form-control"
+                                                placeholder="مثلاً: CBC أو Glucose" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">النتيجة</label>
+                                            <input type="text" name="result" class="form-control"
+                                                placeholder="مثلاً: 110 mg/dL" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">بواسطة</label>
+                                            <select name="added_by" class="form-select" required>
+                                                <option value="" selected disabled>اختر المسؤول...</option>
+                                                {% for member in staff %}
+                                                <option value="{{ member.username }}">{{ member.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">إلغاء</button>
+                                        <button type="submit" class="btn btn-success">حفظ التحليل</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="addMed{{ patient.national_id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form
+                                    action="{{ url_for('manage_medications', action='add', patient_id=patient.national_id) }}"
+                                    method="POST">
+                                    <div class="modal-header bg-warning text-dark">
+                                        <h5 class="modal-title">إضافة دواء (روشتة) لـ {{ patient.name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">اختر الدواء من المخزون</label>
+                                            <select name="medication_name" class="form-select" required>
+                                                <option value="" selected disabled>اختر الصنف المتاح...</option>
+                                                {% for med in inventory_meds %}
+                                                <option value="{{ med }}">{{ med }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">الجرعة (Dosage)</label>
+                                            <input type="text" name="dosage" class="form-control"
+                                                placeholder="مثلاً: قرص 3 مرات يومياً" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">الطبيب المعالج</label>
+                                            <select name="prescribed_by" class="form-select" required>
+                                                <option value="" selected disabled>اختر الطبيب...</option>
+                                                {% for member in staff %}
+                                                <option value="{{ member.username }}">{{ member.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">إلغاء</button>
+                                        <button type="submit" class="btn btn-warning">إضافة للروشتة</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                     {% endfor %}
                 </tbody>
             </table>
@@ -281,39 +417,39 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const editModal = document.getElementById('editPatientModal');
-        const editForm = document.getElementById('editPatientForm');
+        document.addEventListener('DOMContentLoaded', function () {
+            const editModal = document.getElementById('editPatientModal');
+            const editForm = document.getElementById('editPatientForm');
 
-        // جلب الأزرار التي تفتح مودال التعديل
-        const editButtons = document.querySelectorAll('.edit-patient-btn');
+            // جلب الأزرار التي تفتح مودال التعديل
+            const editButtons = document.querySelectorAll('.edit-patient-btn');
 
-        editButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                // 1. جلب البيانات من الـ Data Attributes للزرار
-                const patientId = this.getAttribute('data-id');
-                const name = this.getAttribute('data-name');
-                const phone = this.getAttribute('data-phone');
-                const gender = this.getAttribute('data-gender');
-                const birth = this.getAttribute('data-birth');
-                const blood = this.getAttribute('data-blood');
-                const history = this.getAttribute('data-history');
+            editButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    // 1. جلب البيانات من الـ Data Attributes للزرار
+                    const patientId = this.getAttribute('data-id');
+                    const name = this.getAttribute('data-name');
+                    const phone = this.getAttribute('data-phone');
+                    const gender = this.getAttribute('data-gender');
+                    const birth = this.getAttribute('data-birth');
+                    const blood = this.getAttribute('data-blood');
+                    const history = this.getAttribute('data-history');
 
-                // 2. تحديث رابط الـ Form ديناميكياً
-                // بنبني الرابط يدوي عشان نتجنب خطأ الـ Undefined في Jinja
-                editForm.action = '/admin/edit_patient/' + patientId;
+                    // 2. تحديث رابط الـ Form ديناميكياً
+                    // بنبني الرابط يدوي عشان نتجنب خطأ الـ Undefined في Jinja
+                    editForm.action = '/admin/edit_patient/' + patientId;
 
-                // 3. تعبئة الحقول بالبيانات (عشان تظهر للمستخدم وهو بيعدل)
-                document.getElementById('edit-fullname').value = name;
-                document.getElementById('edit-phone').value = phone;
-                document.getElementById('edit-gender').value = gender;
-                document.getElementById('edit-birth').value = birth;
-                document.getElementById('edit-blood').value = blood;
-                document.getElementById('edit-history').value = history;
+                    // 3. تعبئة الحقول بالبيانات (عشان تظهر للمستخدم وهو بيعدل)
+                    document.getElementById('edit-fullname').value = name;
+                    document.getElementById('edit-phone').value = phone;
+                    document.getElementById('edit-gender').value = gender;
+                    document.getElementById('edit-birth').value = birth;
+                    document.getElementById('edit-blood').value = blood;
+                    document.getElementById('edit-history').value = history;
+                });
             });
         });
-    });
-</script>
+    </script>
 
 </body>
 
