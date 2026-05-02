@@ -1,347 +1,320 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-    <head>
-        <meta charset="UTF-8">
-        <title>IHMS - إدارة المرضى</title>
-        <link rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
-        <link rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-        <link rel="stylesheet" href="../static/stylesheet.css">
-    </head>
-    <body>
 
-        <div class="sidebar d-flex flex-column p-3 vh-100 position-fixed">
+<head>
+    <meta charset="UTF-8">
+    <title>IHMS - إدارة المرضى</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../static/stylesheet.css">
+</head>
+
+<body>
+
+    <div class="sidebar d-flex flex-column p-3 vh-100 position-fixed">
         <h1 class="text-center mb-4 text-primary fw-bold">IHMS</h3>
-        <hr>
+            <hr>
 
-        <ul class="nav nav-pills flex-column mb-auto w-100 p-0">
-            <li class="nav-item w-100 mb-2">
-                <a href="{{ url_for('admin_dashboard') }}" class="nav-link w-100 fs-5">
-                    <i class="bi bi-speedometer2 me-2"></i> لوحة التحكم
-                </a>
-            </li>
-            <li class="nav-item w-100 mb-2">
-                <a href="{{ url_for('patients_list') }}" class="nav-link active  w-100 fs-5">
-                    <i class="bi bi-people me-2"></i> إدارة المرضى
-                </a>
-            </li>
-            <li class="nav-item w-100 mb-2">
-                <a href="{{ url_for('appointments_list') }}" class="nav-link w-100 fs-5">
-                    <i class="bi bi-calendar-event me-2"></i> المواعيد
-                </a>
-            </li>
-            <li class="nav-item w-100 mb-2">
-                <a href="{{ url_for('inventory') }}" class="nav-link w-100 fs-5">
-                    <i class="bi bi-box-seam me-2"></i> المخزون
-                </a>
-            </li>
-        </ul>
+            <ul class="nav nav-pills flex-column mb-auto w-100 p-0">
+                <li class="nav-item w-100 mb-2">
+                    <a href="{{ url_for('admin_dashboard') }}" class="nav-link w-100 fs-5">
+                        <i class="bi bi-speedometer2 me-2"></i> لوحة التحكم
+                    </a>
+                </li>
+                <li class="nav-item w-100 mb-2">
+                    <a href="{{ url_for('patients_list') }}" class="nav-link active  w-100 fs-5">
+                        <i class="bi bi-people me-2"></i> إدارة المرضى
+                    </a>
+                </li>
+                <li class="nav-item w-100 mb-2">
+                    <a href="{{ url_for('appointments_list') }}" class="nav-link w-100 fs-5">
+                        <i class="bi bi-calendar-event me-2"></i> المواعيد
+                    </a>
+                </li>
+                <li class="nav-item w-100 mb-2">
+                    <a href="{{ url_for('inventory') }}" class="nav-link w-100 fs-5">
+                        <i class="bi bi-box-seam me-2"></i> المخزون
+                    </a>
+                </li>
+            </ul>
 
-        <hr>
-        <div class="mt-auto w-100">
-            <a href="{{ url_for('patient_logout') }}" class="btn btn-outline-danger w-100 py-2">
-                <i class="bi bi-box-arrow-left me-2"></i> تسجيل الخروج
-            </a>
+            <hr>
+            <div class="mt-auto w-100">
+                <a href="{{ url_for('patient_logout') }}" class="btn btn-outline-danger w-100 py-2">
+                    <i class="bi bi-box-arrow-left me-2"></i> تسجيل الخروج
+                </a>
+            </div>
+    </div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>سجل المرضى</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPatientModal">
+                <i class="bi bi-person-plus"></i> تسجيل مريض جديد
+            </button>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form class="mb-3 mt-3" method="GET" action="{{ url_for('patients_list') }}">
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input type="text" name="search" class="form-control"
+                    placeholder="ابحث بالاسم أو الرقم القومي أو رقم الهاتف..." value="{{ search_query }}">
+                <button class="btn btn-primary" type="submit">بحث</button>
+            </div>
+        </form>
+
+        <div class="card shadow-sm p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">الرقم القومي</th>
+                        <th>الاسم بالكامل</th>
+                        <th>الجنس</th>
+                        <th>رقم الهاتف</th>
+                        <th>فصيلة الدم</th>
+                        <th class="text-center">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in patients %}
+                    <tr>
+                        <td class="ps-4">{{ patient.national_id }}</td>
+                        <td>{{ patient.name }}</td>
+                        <td>{{ patient.gender }}</td>
+                        <td>{{ patient.phone }}</td>
+                        <td><span class="badge bg-info text-dark">{{
+                                patient.blood_type }}</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-primary edit-patient-btn" data-bs-toggle="modal"
+                                data-bs-target="#editPatientModal" data-id="{{ patient.national_id }}"
+                                data-name="{{ patient.name }}" data-phone="{{ patient.phone }}"
+                                data-gender="{{ patient.gender }}" data-birth="{{ patient.birth_date }}"
+                                data-blood="{{ patient.blood_type }}" data-history="{{ patient.medical_history }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+
+                            <a href="{{ url_for('delete_patient', id=patient.national_id) }}"
+                                class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('هل أنت متأكد من حذف هذا المريض؟')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {{ 'disabled' if page == 1 }}">
+                        <a class="page-link"
+                            href="{{ url_for('patients_list', page=page-1, search=search_query) }}">السابق</a>
+                    </li>
+
+                    {% for p in range(1, total_pages + 1) %}
+                    <li class="page-item {{ 'active' if p == page }}">
+                        <a class="page-link" href="{{ url_for('patients_list', page=p, search=search_query) }}">{{ p
+                            }}</a>
+                    </li>
+                    {% endfor %}
+
+                    <li class="page-item {{ 'disabled' if page == total_pages }}">
+                        <a class="page-link"
+                            href="{{ url_for('patients_list', page=page+1, search=search_query) }}">التالي</a>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 
-        <div class="main-content">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>سجل المرضى</h2>
-                <button class="btn btn-primary" data-bs-toggle="modal"
-                    data-bs-target="#addPatientModal">
-                    <i class="bi bi-person-plus"></i> تسجيل مريض جديد
-                </button>
-            </div>
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show"
-                role="alert">
-                {{ message }}
-                <button type="button" class="btn-close"
-                    data-bs-dismiss="alert"></button>
-            </div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
-
-            <div class="mb-3 mt-3">
-                <div class="input-group">
-                    <span class="input-group-text bg-white"><i
-                            class="bi bi-search"></i></span>
-                    <input type="text" id="patientSearch" class="form-control"
-                        placeholder="ابحث بالاسم أو الرقم القومي أو رقم الهاتف...">
+    <div class="modal fade" id="addPatientModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">تسجيل مريض جديد (بيانات
+                        كاملة)</h5>
+                    <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal"></button>
                 </div>
-            </div>
+                <form action="{{ url_for('add_patient') }}" method="POST">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">الاسم
+                                    بالكامل</label>
+                                <input type="text" name="full_name" class="form-control"
+                                    placeholder="أدخل الاسم الرباعي" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">الرقم
+                                    القومي (14 رقم)</label>
+                                <input type="text" name="national_id" class="form-control" maxlength="14" required>
+                            </div>
 
-            <div class="card shadow-sm p-0">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-4">الرقم القومي</th>
-                            <th>الاسم بالكامل</th>
-                            <th>الجنس</th>
-                            <th>رقم الهاتف</th>
-                            <th>فصيلة الدم</th>
-                            <th class="text-center">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for patient in patients %}
-                        <tr>
-                            <td class="ps-4">{{ patient.national_id }}</td>
-                            <td>{{ patient.name }}</td>
-                            <td>{{ patient.gender }}</td>
-                            <td>{{ patient.phone }}</td>
-                            <td><span class="badge bg-info text-dark">{{
-                                    patient.blood_type }}</span></td>
-                            <td class="text-center">
-                                <button
-                                    class="btn btn-sm btn-outline-primary edit-patient-btn"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#editPatientModal"
-                                    data-id="{{ patient.national_id }}"
-                                    data-name="{{ patient.name }}"
-                                    data-phone="{{ patient.phone }}"
-                                    data-gender="{{ patient.gender }}"
-                                    data-birth="{{ patient.birth_date }}"
-                                    data-blood="{{ patient.blood_type }}"
-                                    data-history="{{ patient.medical_history }}">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">كلمة مرور
+                                    الحساب</label>
+                                <input type="password" name="password" class="form-control"
+                                    placeholder="للدخول إلى بوابة المريض" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">رقم
+                                    الهاتف</label>
+                                <input type="text" name="phone" class="form-control" placeholder="01xxxxxxxxx">
+                            </div>
 
-                                <a
-                                    href="{{ url_for('delete_patient', id=patient.national_id) }}"
-                                    class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('هل أنت متأكد من حذف هذا المريض؟')">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">الجنس</label>
+                                <select name="gender" class="form-select">
+                                    <option value="ذكر">ذكر</option>
+                                    <option value="أنثى">أنثى</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">تاريخ
+                                    الميلاد</label>
+                                <input type="date" name="birth_date" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">فصيلة
+                                    الدم</label>
+                                <select name="blood_type" class="form-select">
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                </select>
+                            </div>
 
-        <div class="modal fade" id="addPatientModal" tabindex="-1"
-            aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">تسجيل مريض جديد (بيانات
-                            كاملة)</h5>
-                        <button type="button"
-                            class="btn-close btn-close-white m-0"
-                            data-bs-dismiss="modal"></button>
-                    </div>
-                    <form action="{{ url_for('add_patient') }}" method="POST">
-                        <div class="modal-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">الاسم
-                                        بالكامل</label>
-                                    <input type="text" name="full_name"
-                                        class="form-control"
-                                        placeholder="أدخل الاسم الرباعي"
-                                        required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">الرقم
-                                        القومي (14 رقم)</label>
-                                    <input type="text" name="national_id"
-                                        class="form-control" maxlength="14"
-                                        required>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">كلمة مرور
-                                        الحساب</label>
-                                    <input type="password" name="password"
-                                        class="form-control"
-                                        placeholder="للدخول إلى بوابة المريض"
-                                        required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">رقم
-                                        الهاتف</label>
-                                    <input type="text" name="phone"
-                                        class="form-control"
-                                        placeholder="01xxxxxxxxx">
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label
-                                        class="form-label fw-bold">الجنس</label>
-                                    <select name="gender" class="form-select">
-                                        <option value="ذكر">ذكر</option>
-                                        <option value="أنثى">أنثى</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold">تاريخ
-                                        الميلاد</label>
-                                    <input type="date" name="birth_date"
-                                        class="form-control">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold">فصيلة
-                                        الدم</label>
-                                    <select name="blood_type"
-                                        class="form-select">
-                                        <option value="A+">A+</option><option
-                                            value="A-">A-</option>
-                                        <option value="B+">B+</option><option
-                                            value="B-">B-</option>
-                                        <option value="O+">O+</option><option
-                                            value="O-">O-</option>
-                                        <option value="AB+">AB+</option><option
-                                            value="AB-">AB-</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-12">
-                                    <label class="form-label fw-bold">التاريخ
-                                        المرضي والحساسية</label>
-                                    <textarea name="medical_history"
-                                        class="form-control" rows="4"
-                                        placeholder="اكتب أي ملاحظات طبية هامة هنا..."></textarea>
-                                </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold">التاريخ
+                                    المرضي والحساسية</label>
+                                <textarea name="medical_history" class="form-control" rows="4"
+                                    placeholder="اكتب أي ملاحظات طبية هامة هنا..."></textarea>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary"
-                                data-bs-dismiss="modal">إلغاء</button>
-                            <button type="submit"
-                                class="btn btn-success px-4">حفظ المريض في
-                                النظام</button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-success px-4">حفظ المريض في
+                            النظام</button>
+                    </div>
+                </form>
             </div>
         </div>
-        <div class="modal fade" id="editPatientModal" tabindex="-1"
-            aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">تعديل بيانات المريض الشاملة</h5>
-                        <button type="button"
-                            class="btn-close btn-close-white m-0"
-                            data-bs-dismiss="modal"></button>
-                    </div>
-                    <form id="editPatientForm" method="POST">
-                        <div class="modal-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">الاسم
-                                        بالكامل</label>
-                                    <input type="text" name="fullname"
-                                        id="edit-fullname" class="form-control"
-                                        required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">رقم
-                                        الهاتف</label>
-                                    <input type="text" name="phone"
-                                        id="edit-phone" class="form-control">
-                                </div>
-                                <div class="col-md-4">
-                                    <label
-                                        class="form-label fw-bold">الجنس</label>
-                                    <select name="gender" id="edit-gender"
-                                        class="form-select">
-                                        <option value="ذكر">ذكر</option>
-                                        <option value="أنثى">أنثى</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold">تاريخ
-                                        الميلاد</label>
-                                    <input type="date" name="birth_date"
-                                        id="edit-birth" class="form-control">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold">فصيلة
-                                        الدم</label>
-                                    <select name="blood_type" id="edit-blood"
-                                        class="form-select">
-                                        <option value="A+">A+</option><option
-                                            value="A-">A-</option>
-                                        <option value="B+">B+</option><option
-                                            value="B-">B-</option>
-                                        <option value="O+">O+</option><option
-                                            value="O-">O-</option>
-                                        <option value="AB+">AB+</option><option
-                                            value="AB-">AB-</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-bold">التاريخ
-                                        المرضي</label>
-                                    <textarea name="medical_history"
-                                        id="edit-history" class="form-control"
-                                        rows="3"></textarea>
-                                </div>
+    </div>
+    <div class="modal fade" id="editPatientModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">تعديل بيانات المريض الشاملة</h5>
+                    <button type="button" class="btn-close btn-close-white m-0" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editPatientForm" action="" method="POST">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">الاسم
+                                    بالكامل</label>
+                                <input type="text" name="fullname" id="edit-fullname" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">رقم
+                                    الهاتف</label>
+                                <input type="text" name="phone" id="edit-phone" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">الجنس</label>
+                                <select name="gender" id="edit-gender" class="form-select">
+                                    <option value="ذكر">ذكر</option>
+                                    <option value="أنثى">أنثى</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">تاريخ
+                                    الميلاد</label>
+                                <input type="date" name="birth_date" id="edit-birth" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">فصيلة
+                                    الدم</label>
+                                <select name="blood_type" id="edit-blood" class="form-select">
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold">التاريخ
+                                    المرضي</label>
+                                <textarea name="medical_history" id="edit-history" class="form-control"
+                                    rows="3"></textarea>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary"
-                                data-bs-dismiss="modal">إلغاء</button>
-                            <button type="submit"
-                                class="btn btn-primary px-4">حفظ
-                                التغييرات</button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary px-4">حفظ
+                            التغييرات</button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
 
-        <script>
-            
-    const editBtns = document.querySelectorAll('.edit-patient-btn');
-    const editForm = document.getElementById('editPatientForm');
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const editModal = document.getElementById('editPatientModal');
+        const editForm = document.getElementById('editPatientForm');
 
-    editBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const id = this.getAttribute('data-id');
-            document.getElementById('edit-fullname').value = this.getAttribute('data-name');
-            document.getElementById('edit-phone').value = this.getAttribute('data-phone');
-            document.getElementById('edit-gender').value = this.getAttribute('data-gender');
-            document.getElementById('edit-birth').value = this.getAttribute('data-birth');
-            document.getElementById('edit-blood').value = this.getAttribute('data-blood');
-            document.getElementById('edit-history').value = this.getAttribute('data-history');
-            
-            editForm.action = `/admin/edit_patient/${id}`;
+        // جلب الأزرار التي تفتح مودال التعديل
+        const editButtons = document.querySelectorAll('.edit-patient-btn');
+
+        editButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                // 1. جلب البيانات من الـ Data Attributes للزرار
+                const patientId = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                const phone = this.getAttribute('data-phone');
+                const gender = this.getAttribute('data-gender');
+                const birth = this.getAttribute('data-birth');
+                const blood = this.getAttribute('data-blood');
+                const history = this.getAttribute('data-history');
+
+                // 2. تحديث رابط الـ Form ديناميكياً
+                // بنبني الرابط يدوي عشان نتجنب خطأ الـ Undefined في Jinja
+                editForm.action = '/admin/edit_patient/' + patientId;
+
+                // 3. تعبئة الحقول بالبيانات (عشان تظهر للمستخدم وهو بيعدل)
+                document.getElementById('edit-fullname').value = name;
+                document.getElementById('edit-phone').value = phone;
+                document.getElementById('edit-gender').value = gender;
+                document.getElementById('edit-birth').value = birth;
+                document.getElementById('edit-blood').value = blood;
+                document.getElementById('edit-history').value = history;
+            });
         });
     });
-    
-    document.getElementById('patientSearch').addEventListener('keyup', function() {
-    // 1. جلب الكلمة المكتوبة وتحويلها لحروف صغيرة (لضمان الدقة)
-    let filter = this.value.toLowerCase();
-    
-    // 2. الوصول لصفوف الجدول
-    let rows = document.querySelectorAll('table tbody tr');
-
-    rows.forEach(row => {
-        // 3. جلب النص من الأعمدة (الاسم، الرقم القومي، الهاتف)
-        let nationalId = row.cells[0].textContent.toLowerCase();
-        let name = row.cells[1].textContent.toLowerCase();
-        let phone = row.cells[3].textContent.toLowerCase();
-
-        // 4. التحقق إذا كانت الكلمة موجودة في أي من هذه الأعمدة
-        if (nationalId.includes(filter) || name.includes(filter) || phone.includes(filter)) {
-            row.style.display = ""; // إظهار الصف
-        } else {
-            row.style.display = "none"; // إخفاء الصف
-        }
-    });
-});
 </script>
 
-        <script
-            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
+</body>
+
 </html>

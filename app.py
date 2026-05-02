@@ -31,7 +31,7 @@ def login():
 def handle_login():
     username = request.form.get('username')
     password = request.form.get('password')
-    role = request.form.get('userRole')
+    role = request.form.get('role')
 
     try:
         conn = get_db_connection()
@@ -65,85 +65,99 @@ def handle_login():
 # لوحة التحكم المحدثة
 @app.route('/admin/dashboard')
 def admin_dashboard():
-    if 'admin_logged_in' not in session:
-        return redirect(url_for('login'))
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # 1. جلب الإحصائيات (البطاقات العلوية)
+    cursor.execute("SELECT COUNT(*) FROM Patients")
+    total_patients = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM appointments WHERE AppDate = CAST(GETDATE() AS DATE)")
+    today_apps = cursor.fetchone()[0]
+
+    # 2. جلب آخر 5 مواعيد لعرضها في الجدول
+    query_latest = """
+    SELECT TOP 5 p.FullName, 
+           CONVERT(VARCHAR, a.AppDate, 23) AS AppDate, 
+           LEFT(CONVERT(VARCHAR, a.AppTime, 108), 5) AS AppTime, 
+           a.[Status]
+    FROM appointments a
+    INNER JOIN Patients p ON a.PatientID = p.NationalID
+    ORDER BY a.AppDate DESC, a.AppTime DESC
+    """
+    cursor.execute(query_latest)
+    rows = cursor.fetchall()
+    
+    latest_appointments = []
+    for row in rows:
+        latest_appointments.append({
+            'patient_name': row[0],
+            'date': row[1],
+            'time': row[2],
+            'status': row[3]  # تم تعديلها من row[5] إلى row[3]
+        })
+
+    conn.close()
+    return render_template('admin.html', 
+                           total_patients=total_patients,
+                           today_apps=today_apps,
+                           latest_appointments=latest_appointments, # المتغير المهم هنا
+                           low_stock=3, # قيم تجريبية حالياً
+                           completed_apps=0)
+
+# إدارة المرضى (العرض + البحث) - دالة واحدة فقط
+@app.route('/admin/patients')
+def patients_list():
+    search_query = request.args.get('search', '').strip()
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    try:
-        # 1. إجمالي عدد المرضى
-        cursor.execute("SELECT COUNT(*) FROM Patients")
-        total_patients = cursor.fetchone()[0]
-
-        # 2. مواعيد اليوم
-        cursor.execute("SELECT COUNT(*) FROM appointments WHERE AppDate = ?", (date.today(),))
-        today_apps = cursor.fetchone()[0]
-
-        # 3. نواقص المخزون (أقل من 20)
-        cursor.execute("SELECT COUNT(*) FROM Inventory WHERE quantity < 20")
-        low_stock = cursor.fetchone()[0]
-
-        # 4. المواعيد التي تمت (تم الكشف)
-        cursor.execute("SELECT COUNT(*) FROM appointments WHERE [Status] = 'تم الكشف'")
-        completed_apps = cursor.fetchone()[0]
-
-        # 5. جلب آخر 5 مرضى للجدول (الديناميكي)
-        cursor.execute("SELECT TOP 5 NationalID, FullName, Phone, blood_type FROM Patients ORDER BY PatientID DESC")
-        rows = cursor.fetchall()
-        latest_patients = []
-        for r in rows:
-            latest_patients.append({
-                "id": r.NationalID, 
-                "name": r.FullName, 
-                "phone": r.Phone, 
-                "blood_type": r.blood_type
-            })
-
-    except Exception as e:
-        print(f"Error in Dashboard: {e}")
-        # قيم افتراضية في حالة الخطأ لضمان عدم توقف الصفحة
-        total_patients = today_apps = low_stock = completed_apps = 0
-        latest_patients = []
-
-    finally:
-        # الإغلاق يكون هنا في النهاية تماماً بعد انتهاء كل العمليات
-        conn.close()
-    
-    return render_template('admin.html', 
-                           total_patients=total_patients, 
-                           today_apps=today_apps, 
-                           low_stock=low_stock,
-                           completed_apps=completed_apps,
-                           latest_patients=latest_patients)
-
-# إدارة المرضى (العرض + البحث) - دالة واحدة فقط
-@app.route('/patients')
-def patients_list():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        # استخدام الأسماء الأصلية للأعمدة كما هي في SQL Server
-        cursor.execute("SELECT PatientID, NationalID, FullName, BirthDate, Gender, Phone, blood_type FROM Patients")
-        rows = cursor.fetchall()
+    # استعلام البحث
+    if search_query:
+        sql = """
+            SELECT * FROM Patients 
+            WHERE FullName LIKE ? OR NationalID LIKE ? OR Phone LIKE ?
+            ORDER BY FullName
+            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+        """
+        params = (f'%{search_query}%', f'%{search_query}%', f'%{search_query}%', offset, per_page)
         
-        patients = []
-        for row in rows:
-            patients.append({
-                'id': row.PatientID,
-                'national_id': row.NationalID, # لاحظ استخدام الاسم الأصلي هنا
-                'name': row.FullName,
-                'birth_date': row.BirthDate,
-                'gender': row.Gender,
-                'phone': row.Phone,
-                'blood_type': row.blood_type
-            })
-        conn.close()
-        return render_template('patients.html', patients=patients)
-    except Exception as e:
-        print(f"Error fetching patients: {e}")
-        return f"حدث خطأ أثناء جلب البيانات: {e}"
+        # حساب إجمالي النتائج للبحث
+        cursor.execute("SELECT COUNT(*) FROM Patients WHERE FullName LIKE ? OR NationalID LIKE ? OR Phone LIKE ?", 
+                       (f'%{search_query}%', f'%{search_query}%', f'%{search_query}%'))
+    else:
+        sql = "SELECT * FROM Patients ORDER BY FullName OFFSET ? ROWS FETCH NEXT ? ROWS ONLY"
+        params = (offset, per_page)
+        cursor.execute("SELECT COUNT(*) FROM Patients")
 
+    total_patients = cursor.fetchone()[0]
+    cursor.execute(sql, params)
+    patients_data = cursor.fetchall()
+    
+    total_pages = (total_patients + per_page - 1) // per_page
+
+    # تحويل البيانات لتناسب القالب
+    patients = []
+    for p in patients_data:
+        patients.append({
+            'national_id': p.NationalID,
+            'name': p.FullName,
+            'gender': p.Gender,
+            'phone': p.Phone,
+            'blood_type': p.blood_type,     
+            'birth_date': p.BirthDate,
+            'medical_history': p.medical_history 
+        })
+
+    return render_template('patients.html', 
+                           patients=patients, 
+                           page=page, 
+                           total_pages=total_pages, 
+                           search_query=search_query)
 # إضافة مريض جديد
 @app.route('/patients/add', methods=['POST'])
 def add_patient():
@@ -171,10 +185,10 @@ def add_patient():
             
             conn.commit()
             conn.close()
-            flash('تم تسجيل المريض بنجاح بكافة بياناته')
+            flash('تم تسجيل المريض بنجاح بكافة بياناته', 'success')
         except Exception as e:
             print(f"Database Error: {e}")
-            flash(f'خطأ في الإضافة: {str(e)}')
+            flash(f'خطأ في الإضافة: {str(e)}', 'danger')
             
         return redirect(url_for('patients_list'))
 
@@ -194,80 +208,120 @@ def delete_patient(id):
     return redirect(url_for('patients_list'))
 
 # تعديل بيانات المريض
-@app.route('/admin/edit_patient/<id>', methods=['POST'])
+@app.route('/admin/edit_patient/<id>', methods=['GET', 'POST'])
 def edit_patient_action(id):
-    # استقبال البيانات الجديدة من الـ Modal
-    fullname = request.form.get('fullname')
-    phone = request.form.get('phone')
-    gender = request.form.get('gender')
-    birth_date = request.form.get('birth_date')
-    blood_type = request.form.get('blood_type')
-    medical_history = request.form.get('medical_history')
+    if request.method == 'POST':
+        # استقبال البيانات الجديدة من الـ Modal
+        fullname = request.form.get('fullname')
+        phone = request.form.get('phone')
+        gender = request.form.get('gender')
+        birth_date = request.form.get('birth_date')
+        blood_type = request.form.get('blood_type')
+        medical_history = request.form.get('medical_history')
 
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # تحديث الجدول باستخدام NationalID كمعرف (id)
-        query = """
-            UPDATE Patients 
-            SET FullName = ?, Phone = ?, Gender = ?, BirthDate = ?, blood_type = ?, medical_history = ?
-            WHERE NationalID = ?
-        """
-        cursor.execute(query, (fullname, phone, gender, birth_date, blood_type, medical_history, id))
-        
-        conn.commit()
-        conn.close()
-        flash("تم تحديث بيانات المريض بنجاح", "success")
-    except Exception as e:
-        print(f"Update Error: {e}")
-        flash("فشل في تحديث البيانات", "danger")
-        
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # تحديث الجدول باستخدام NationalID كمعرف (id)
+            query = """
+                UPDATE Patients 
+                SET FullName = ?, Phone = ?, Gender = ?, BirthDate = ?, blood_type = ?, medical_history = ?
+                WHERE NationalID = ?
+            """
+            cursor.execute(query, (fullname, phone, gender, birth_date, blood_type, medical_history, id))
+            
+            conn.commit()
+            conn.close()
+            flash("تم تحديث بيانات المريض بنجاح", "success")
+        except Exception as e:
+            print(f"Update Error: {e}")
+            flash("فشل في تحديث البيانات", "danger")
+            
     return redirect(url_for('patients_list'))
 
 # إدارة المواعيد
 @app.route('/admin/appointments')
 def appointments_list():
-    conn = None
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # جلب المواعيد مع اسم المريض باستخدام JOIN
-        # ملاحظة: نربط a.PatientID بـ p.NationalID حسب تصميمك
-        query_apps = """
-        SELECT a.AppointmentID, p.FullName, p.NationalID,
-               CONVERT(VARCHAR, a.AppDate, 23) AS AppDate, 
-               LEFT(CONVERT(VARCHAR, a.AppTime, 108), 5) AS AppTime, 
-               a.[Status], a.Notes
-        FROM appointments a
-        INNER JOIN Patients p ON a.PatientID = p.NationalID
-        ORDER BY a.AppDate ASC, a.AppTime ASC
-        """
-        cursor.execute(query_apps)
-        rows = cursor.fetchall()
-        appointments = []
-        for row in rows:
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # 1. حساب إجمالي عدد المواعيد
+    cursor.execute("SELECT COUNT(*) FROM appointments")
+    total_appointments = cursor.fetchone()[0]
+    total_pages = (total_appointments + per_page - 1) // per_page
+
+    # 2. جلب المواعيد للصفحة الحالية فقط
+    query_apps = """
+    SELECT a.AppointmentID, p.FullName, p.NationalID,
+           CONVERT(VARCHAR, a.AppDate, 23) AS AppDate, 
+           LEFT(CONVERT(VARCHAR, a.AppTime, 108), 5) AS AppTime, 
+           a.[Status], a.Notes
+    FROM appointments a
+    INNER JOIN Patients p ON a.PatientID = p.NationalID
+    ORDER BY 
+        CASE WHEN a.AppDate = CAST(GETDATE() AS DATE) THEN 0 ELSE 1 END, -- مواعيد اليوم أولاً
+        a.AppDate ASC, -- ثم باقي المواعيد مرتبة تصاعدياً حسب التاريخ
+        a.AppTime ASC  -- ثم حسب الوقت
+    OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+    """
+    cursor.execute(query_apps, (offset, per_page))
+    rows = cursor.fetchall()
+    
+    # تحويل البيانات (باستخدام القواميس لتجنب الأخطاء السابقة)
+    appointments = []
+    for row in rows:
+            # الوصول عبر الترتيب الرقمي أضمن وسيلة لتجنب مشاكل الأسماء
             appointments.append({
-                'id': row.AppointmentID,
-                'patient_name': row.FullName,
-                'national_id': row.NationalID,
-                'date': row.AppDate,
-                'time': row.AppTime,
-                'status': row.Status,
-                'notes': row.Notes
+                'id': row[0],           # AppointmentID
+                'patient_name': row[1], # FullName
+                'national_id': row[2],  # NationalID
+                'date': row[3],         # AppDate
+                'time': row[4],         # AppTime
+                'status': row[5],       # Status (هذا هو المفتاح المهم)
+                'notes': row[6]         # Notes
             })
 
-        # جلب قائمة المرضى لاستخدامها في الـ Dropdown عند إضافة موعد
-        cursor.execute("SELECT NationalID, FullName FROM Patients")
-        all_patients = [{"id": r.NationalID, "name": r.FullName} for r in cursor.fetchall()]
-        
-        conn.close()
-        return render_template('appointments.html', appointments=appointments, patients=all_patients)
+    # 3. جلب قائمة المرضى للـ Dropdown
+    cursor.execute("SELECT NationalID, FullName FROM Patients")
+    all_patients = [{"id": r[0], "name": r[1]} for r in cursor.fetchall()]
 
-    except Exception as e:
-        print(f"Error: {e}")
-        return f"حدث خطأ في جلب المواعيد: {e}"
+    conn.close()
+    return render_template('appointments.html', 
+                           appointments=appointments, 
+                           patients=all_patients,
+                           page=page,
+                           total_pages=total_pages)
+    
+# تحديث حالة الموعد (مثلاً من "قادم" إلى "تم الكشف")
+@app.route('/admin/update_appointment_status/<int:app_id>', methods=['POST'])
+def update_appointment_status(app_id):
+    new_status = request.form.get('status')
+    
+    # هذه هي القائمة التي اقترحتها لتكون "فلتر" أمان في الكود
+    allowed_statuses = ['قادم', 'تم الكشف', 'الغاء'] 
+    
+    if new_status not in allowed_statuses:
+        flash('خطأ: الحالة المرسلة غير مدعومة', 'danger')
+        return redirect(url_for('appointments_list'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE appointments SET Status = ? WHERE AppointmentID = ?", (new_status, app_id))
+        conn.commit()
+        flash('تم تحديث الحالة بنجاح', 'success')
+    except pyodbc.IntegrityError:
+        # هذا الخطأ سيحدث فقط إذا نسيت تحديث الـ Constraint في SQL Server
+        flash('خطأ: قاعدة البيانات ترفض هذه الحالة (تأكد من تعديل الـ Constraint)', 'danger')
+    finally:
+        conn.close()
+    
+    return redirect(url_for('appointments_list'))
 
 # إضافة موعد جديد
 @app.route('/add_appointment', methods=['POST'])

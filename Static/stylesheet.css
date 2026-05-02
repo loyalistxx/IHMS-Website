@@ -35,8 +35,12 @@
 
 
         .loginBody {
+            background: linear-gradient(rgba(0, 50, 100, 0.2), rgba(0, 50, 100, 0.2)), 
+                        url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            backdrop-filter: blur(8px);
             font-family: 'Cairo', sans-serif;
-            background: linear-gradient(135deg, #2c3e50 0%, white 150%);
             height: 100vh;
             display: flex;
             align-items: center;
@@ -44,12 +48,12 @@
         }
 
         .login-card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             width: 100%;
             max-width: 400px;
+            padding: 2rem;
         }
 
         .btn-login {
