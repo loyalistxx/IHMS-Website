@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import pyodbc
 from datetime import datetime, date
+import webbrowser
+
+webbrowser.open("http://127.0.0.1:5000")
 
 app = Flask(__name__)
 
@@ -951,4 +954,4 @@ def patient_logout():
 
 # --- 3. تشغيل السيرفر (يجب أن يكون في آخر الملف) ---
 if __name__ == '__main__':
-    app.run(debug=True, threaded=True) # Threaded يجعل التعامل مع الطلبات أسرع
+    app.run(debug=False, threaded=True) # Threaded يجعل التعامل مع الطلبات أسرع
