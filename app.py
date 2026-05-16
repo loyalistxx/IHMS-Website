@@ -1,3 +1,6 @@
+import os
+import sys
+
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import pyodbc
 from datetime import datetime, date
@@ -5,7 +8,16 @@ import webbrowser
 
 webbrowser.open("http://127.0.0.1:5000")
 
-app = Flask(__name__)
+def get_resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
+app = Flask(
+    __name__,
+    template_folder=get_resource_path("templates"),
+    static_folder=get_resource_path("static")
+)
 
 app.secret_key = "secret_key_for_session"
 
